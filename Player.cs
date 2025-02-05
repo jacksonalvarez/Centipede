@@ -22,14 +22,18 @@ public class Player : MonoBehaviour {
 
     // Shooting properties
     public GameObject firePrefab;
-
-    public GameObject bulletPrefab;  // Bullet prefab to instantiate
-    public Transform muzzlePos;      // Position from which the bullet is fired
-    public float shootingForce = 200f;  // Force applied to the bullet
+    public GameObject bulletPrefab;
+    public Transform muzzlePos;
+    public float shootingForce = 200f;
 
     // Firing rate properties
-    private float lastFiredTime = 0f;  // Time when the last shot was fired
-    public float fireRate = 0.5f;      // Fire rate: 2 bullets per second (0.5s per bullet)
+    private float lastFiredTime = 0f;
+    public float fireRate = 0.5f;
+    public Rigidbody rb;
+
+    // Audio
+    public AudioSource gunAudioSource;
+    public AudioClip gunShotClip;
 
     // Other
     public bool drinksWater = false;
@@ -41,6 +45,11 @@ public class Player : MonoBehaviour {
         // Lock cursor to the center of the screen for FPS view
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Ensure AudioSource is attached
+        if (gunAudioSource == null) {
+            gunAudioSource = gameObject.AddComponent<AudioSource>();
+        }
     }
 
     private void Update() {
@@ -51,7 +60,7 @@ public class Player : MonoBehaviour {
         HandleMovement();
 
         // Handle shooting when Mouse1 is pressed
-        if (Input.GetMouseButton(0)) {  // Check if the player is holding down Mouse1
+        if (Input.GetMouseButton(0)) {
             if (AnimationController.isUsingGun && !AnimationController.isReloading && AnimationController.isShooting) {
                 HandleFire();
             }
@@ -59,69 +68,55 @@ public class Player : MonoBehaviour {
     }
 
     private void HandleCameraLook() {
-        // Get mouse input
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        // Rotate player horizontally (Y-axis)
         transform.Rotate(Vector3.up * mouseX);
 
-        // Rotate camera vertically (X-axis), with clamping for vertical rotation limits
         verticalLookRotation -= mouseY;
         verticalLookRotation = Mathf.Clamp(verticalLookRotation, -verticalRotationLimit, verticalRotationLimit);
         playerCamera.transform.localRotation = Quaternion.Euler(verticalLookRotation, 0f, 0f);
     }
 
     private void HandleMovement() {
-        // Get movement input
         moveForwardBackward = Input.GetAxis("Vertical") * movementSpeed;
         moveLeftRight = Input.GetAxis("Horizontal") * movementSpeed;
 
-        // Calculate movement direction relative to the camera's forward vector
         Vector3 moveDirection = (transform.forward * moveForwardBackward) + (transform.right * moveLeftRight);
-
-        // Move the player
         transform.Translate(moveDirection * Time.deltaTime, Space.World);
     }
 
-    // Handle firing bullets based on time interval
     private void HandleFire() {
         if (Time.time - lastFiredTime >= fireRate) {
-            Shoot();  // Fire the weapon
-            lastFiredTime = Time.time;  // Record the time of the shot
+            Shoot();
+            lastFiredTime = Time.time;
         }
     }
 
-    // Shooting function
-// Shooting function
-private void Shoot() {
-    if (bulletPrefab != null && muzzlePos != null) {
-        // Instantiate the bullet at the muzzle position with rotation
-        GameObject bullet = Instantiate(bulletPrefab, muzzlePos.position, muzzlePos.rotation);
+    private void Shoot() {
+        if (bulletPrefab != null && muzzlePos != null) {
+            GameObject bullet = Instantiate(bulletPrefab, muzzlePos.position, muzzlePos.rotation);
+            Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+            
+            if (bulletRb != null) {
+                bulletRb.AddForce(muzzlePos.forward * shootingForce, ForceMode.VelocityChange);
+            }
 
-        // Get the Rigidbody component of the bullet
-        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+            Destroy(bullet, 5f);
+        }
         
-        if (bulletRb != null) {
-            // Apply force to the bullet in the direction the muzzle is facing
-            bulletRb.AddForce(muzzlePos.forward * shootingForce, ForceMode.VelocityChange);
+        // Play gunshot sound
+        if (gunAudioSource != null && gunShotClip != null) {
+            gunAudioSource.PlayOneShot(gunShotClip);
         }
-
-        // Destroy the bullet after a few seconds to clean up
-        Destroy(bullet, 5f);  // Bullet lifespan (5 seconds)
-
     }
-}
 
-
-    // Example method to update damage
     public void UpdateDamage(float meleeDamage, float gunDamage) {
         PlayerData = (PlayerData.meleeDamage + meleeDamage, PlayerData.gunDamage + gunDamage);
     }
 
     public string HitType {
         get {
-            // Check if melee damage is greater than gun damage
             if (PlayerData.meleeDamage > PlayerData.gunDamage) {
                 return "Prefers being Close";
             } else {
