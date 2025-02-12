@@ -543,14 +543,16 @@ MonoBehaviour:
   firePrefab: {fileID: 7626260116731051362, guid: a8dbb41ea887f0d41afaa616099f9424, type: 3}
   bulletPrefab: {fileID: 7626260116731051362, guid: a8dbb41ea887f0d41afaa616099f9424, type: 3}
   muzzlePos: {fileID: 2003842534}
-  shootingForce: 40
-  fireRate: 0.22
+  shootingForce: 11.6
+  fireRate: 0.1
   rb: {fileID: 304557604}
   gunAudioSource: {fileID: 1108538}
   gunShotClip: {fileID: 8300000, guid: 92cc0b0efe208f740bbc75f13d2659be, type: 3}
+  emptyGun: {fileID: 8300000, guid: 5e6b507399dd0de4f8829e5a83cef5be, type: 3}
   maxHealth: 100
   currentHealth: 0
   healthBar: {fileID: 5754920}
+  bullets: 0
   drinksWater: 0
 --- !u!54 &304557604
 Rigidbody:
@@ -644,7 +646,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 4246f42d38fc7c648879a9d7bd688f1f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 26ce86e7f4d6e82438811bd217defb85, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2820,6 +2822,7 @@ MonoBehaviour:
   isUsingGun: 1
   isShooting: 0
   isReloading: 0
+  playerController: {fileID: 304557603}
 --- !u!4 &928229162701031606
 Transform:
   m_ObjectHideFlags: 0

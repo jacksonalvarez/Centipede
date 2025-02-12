@@ -18,6 +18,8 @@ public class PlayerAnimationController : MonoBehaviour
     public bool isUsingGun = true; // Start with the gun equipped
     public bool isShooting = false;
     public bool isReloading = false;
+    public Player playerController;
+
 
     void Start()
     {
@@ -30,6 +32,10 @@ public class PlayerAnimationController : MonoBehaviour
     void Update()
     {
         HandleWeaponSwitch();
+
+        if (playerController.bullets <= 0) {
+            isShooting = false;
+        }
 
         if (isUsingGun)
         {
@@ -67,7 +73,7 @@ public class PlayerAnimationController : MonoBehaviour
             StartCoroutine(ReloadGun());
             Debug.Log("Reloading...");
         }
-        else if (Input.GetMouseButton(0))
+        else if (Input.GetMouseButton(0) && playerController.bullets > 0)
         {
             isShooting = true;
             isReloading = false;
@@ -76,7 +82,30 @@ public class PlayerAnimationController : MonoBehaviour
         {
             isShooting = false;
         }
+        /* else if(Input.GetMouseButton(0) && playerController.bullets <= 0 && playerController.gunAudioSource.isPlaying == false){
+            playerController.gunAudioSource.PlayOneShot(playerController.emptyGun);
+        } */
+        else if(Input.GetMouseButton(0) && playerController.bullets <= 0 && playerController.gunAudioSource.isPlaying == false)
+        {
+            PlayEmptyGunSound();
+        } 
     }
+
+    private void PlayEmptyGunSound()
+    {
+        
+        if (Input.GetMouseButton(0) && playerController.bullets <= 0 && !playerController.gunAudioSource.isPlaying)
+        {
+            playerController.gunAudioSource.PlayOneShot(playerController.emptyGun);
+        }
+    }
+
+
+    /* private IEnumerator PlayEmptyGunSound()
+    {
+        playerController.gunAudioSource.PlayOneShot(playerController.emptyGun);
+        yield return new WaitForSeconds(1f);
+    } */
 
     private IEnumerator ReloadGun()
     {
