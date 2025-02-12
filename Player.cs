@@ -34,11 +34,14 @@ public class Player : MonoBehaviour {
     // Audio
     public AudioSource gunAudioSource;
     public AudioClip gunShotClip;
+    public AudioClip emptyGun;
 
     public int maxHealth = 100;
     public int currentHealth;
 
     public HealthBar healthBar;
+
+    public int bullets = 30;
 
     // Other
     public bool drinksWater = false;
@@ -46,7 +49,7 @@ public class Player : MonoBehaviour {
     private void Start() {
         // Initialize PlayerData
         PlayerData = (0f, 0f);
-
+        bullets = 30;
         // Lock cursor to the center of the screen for FPS view
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -73,6 +76,12 @@ public class Player : MonoBehaviour {
                 HandleFire();
             }
         }
+
+        if (AnimationController.isReloading) {
+            ReloadMag();
+        }
+
+        Debug.Log(bullets);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -116,13 +125,15 @@ public class Player : MonoBehaviour {
     }
 
     private void Shoot() {
-        if (bulletPrefab != null && muzzlePos != null) {
+        if (bulletPrefab != null && muzzlePos != null && bullets > 0) {
             GameObject bullet = Instantiate(bulletPrefab, muzzlePos.position, muzzlePos.rotation);
             Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
             
             if (bulletRb != null) {
                 bulletRb.AddForce(muzzlePos.forward * shootingForce, ForceMode.VelocityChange);
             }
+
+            bullets--;
 
             Destroy(bullet, 5f);
         }
@@ -145,6 +156,10 @@ public class Player : MonoBehaviour {
                 return "Prefers at a range";
             }
         }
+    }
+
+    public void ReloadMag() {
+        bullets = 30;
     }
 
     public void StartIntroCutscene() {
