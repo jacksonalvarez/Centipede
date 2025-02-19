@@ -21,18 +21,20 @@ public class WormAI : MonoBehaviour, IMessageReceiver
     [SerializeField] AudioSource audioSource = default;  // AudioSource for primary worm sound
     [SerializeField] AudioClip surfaceSound = default;
     [SerializeField] AudioClip bossSound = default;
-
     [SerializeField] AudioClip submergeSound = default;
-    
-    Player playerShip;
+
+    CharacterController playerShip;
     UIHooks ui;
 
     public Vector3 startPosition, endPosition;
-
     RaycastHit hitInfo;
     int totalHealth;
     int currentHealth;
     Damageable[] damageables;
+
+    // New state variables
+    private bool isTrackingPath = true;  // Whether we are following the path or attacking
+    private bool isAttacking = false;    // Whether an attack is in progress
 
     void Start()
     {
@@ -45,7 +47,7 @@ public class WormAI : MonoBehaviour, IMessageReceiver
         currentHealth = totalHealth;
         ui.SetHealth(currentHealth, totalHealth);
 
-        playerShip = Object.FindObjectOfType<Player>();
+        playerShip = Object.FindObjectOfType<CharacterController>();
 
         AI();
     }
@@ -53,79 +55,80 @@ public class WormAI : MonoBehaviour, IMessageReceiver
     void AI()
     {
         UpdatePath();
-        StartCoroutine(FollowPath());
+        StartCoroutine(HandleAttacks());
 
-        IEnumerator FollowPath()
+        // Coroutine to handle alternating between normal attack and path-following
+        IEnumerator HandleAttacks()
         {
             while (true)
             {
-                yield return new WaitUntil(() => cart.m_Position >= 0.06f);
-                Debug.Log("TEST");
+                if (isTrackingPath)
+                {
+                    // Follow Path if the state is set to true
+                    yield return StartCoroutine(FollowPath());
+                }
+                else
+                {
+                    // Normal Attack if the state is set to false
+                    yield return StartCoroutine(NormalAttack());
+                }
+                
+                // Toggle between following the path and attacking
+                isTrackingPath = !isTrackingPath;
 
-                GroundContact.Invoke(true, true);
-                audioSource.PlayOneShot(bossSound); // Play main surface sound
-                PlaySurfaceSound(cart.transform.position); // Temp method for additional sound
-
-                yield return new WaitUntil(() => cart.m_Position >= 0.23f);
-                Debug.Log("TEST2");
-
-                GroundContact.Invoke(false, true);
-                yield return new WaitUntil(() => cart.m_Position >= 0.60f);
-                GroundContact.Invoke(true, false);
-                PlayExitSound(cart.transform.position);
-
-                yield return new WaitUntil(() => cart.m_Position >= 0.90f);
-                GroundContact.Invoke(false, false);
-                yield return new WaitUntil(() => cart.m_Position >= 0.99f);
-                yield return new WaitForSeconds(Random.Range(1, 2));
-
-                UpdatePath();
-                yield return new WaitUntil(() => cart.m_Position <= 0.05f);
+                // Wait for a moment before toggling again (adjust this time as needed)
+                yield return new WaitForSeconds(1f);
             }
         }
     }
 
-    void PlaySurfaceSound(Vector3 position)
+    // Path-following logic
+    IEnumerator FollowPath()
     {
-        GameObject audioObj = new GameObject("TempAudioSource");
-        audioObj.transform.position = position;
-        AudioSource tempAudioSource = audioObj.AddComponent<AudioSource>();
-        
-        tempAudioSource.clip = surfaceSound;
-        tempAudioSource.spatialBlend = .5f;
-        tempAudioSource.Play();
-        
-        Destroy(audioObj, surfaceSound.length);
-    }
-
-    void PlayExitSound(Vector3 position)
-    {
-        GameObject audioObj = new GameObject("TempAudioSource");
-        audioObj.transform.position = position;
-        AudioSource tempAudioSource = audioObj.AddComponent<AudioSource>();
-        
-        tempAudioSource.clip = submergeSound;
-        tempAudioSource.spatialBlend = .5f;
-        tempAudioSource.Play();
-        
-        Destroy(audioObj, surfaceSound.length);
-    }
-
-    public void OnReceiveMessage(MessageType type, object sender, object msg)
-    {
-        if (type == MessageType.DAMAGED)
+        while (cart.m_Position > 0.05f)
         {
-            Damageable damageable = sender as Damageable;
-            Damageable.DamageMessage message = (Damageable.DamageMessage)msg;
-            currentHealth -= message.amount;
+            yield return new WaitUntil(() => cart.m_Position >= 0.06f);
+            Debug.Log("TEST");
 
-            if (currentHealth <= 0)
-                ui.ReloadScene();
+            GroundContact.Invoke(true, true);
+            audioSource.PlayOneShot(bossSound); // Play main surface sound
+            PlaySurfaceSound(cart.transform.position); // Temp method for additional sound
 
-            ui.SetHealth(currentHealth, totalHealth);
+            yield return new WaitUntil(() => cart.m_Position >= 0.23f);
+            Debug.Log("TEST2");
+
+            GroundContact.Invoke(false, true);
+            yield return new WaitUntil(() => cart.m_Position >= 0.60f);
+            GroundContact.Invoke(true, false);
+            PlayExitSound(cart.transform.position);
+
+            yield return new WaitUntil(() => cart.m_Position >= 0.90f);
+            GroundContact.Invoke(false, false);
+            yield return new WaitUntil(() => cart.m_Position >= 0.99f);
+
+            yield return new WaitForSeconds(Random.Range(1, 2));
+
+            UpdatePath();
+            yield return new WaitUntil(() => cart.m_Position <= 0.05f);
         }
+
+        Debug.Log("Finished following the path.");
     }
 
+    // Normal attack logic
+    IEnumerator NormalAttack()
+    {
+        Debug.Log("Performing Normal Attack");
+
+        // Your normal attack logic here
+        // This is a simple placeholder for normal attack, you can include animations, damage dealing, etc.
+        yield return new WaitForSeconds(1f); // Simulating attack duration
+
+        // After attack finishes
+        Debug.Log("Normal Attack Finished");
+    }
+
+    // Update the path based on the player's position
     void UpdatePath()
     {
         Vector3 playerPosition = playerShip.transform.position;
@@ -155,5 +158,48 @@ public class WormAI : MonoBehaviour, IMessageReceiver
         cart.m_Speed = cart.m_Path.PathLength / 700;
 
         OnBossReveal.Invoke(true);
+    }
+
+    // Sound effects for surface sound
+    void PlaySurfaceSound(Vector3 position)
+    {
+        GameObject audioObj = new GameObject("TempAudioSource");
+        audioObj.transform.position = position;
+        AudioSource tempAudioSource = audioObj.AddComponent<AudioSource>();
+        
+        tempAudioSource.clip = surfaceSound;
+        tempAudioSource.spatialBlend = .5f;
+        tempAudioSource.Play();
+        
+        Destroy(audioObj, surfaceSound.length);
+    }
+
+    // Sound effects for exit sound
+    void PlayExitSound(Vector3 position)
+    {
+        GameObject audioObj = new GameObject("TempAudioSource");
+        audioObj.transform.position = position;
+        AudioSource tempAudioSource = audioObj.AddComponent<AudioSource>();
+        
+        tempAudioSource.clip = submergeSound;
+        tempAudioSource.spatialBlend = .5f;
+        tempAudioSource.Play();
+        
+        Destroy(audioObj, surfaceSound.length);
+    }
+
+    public void OnReceiveMessage(MessageType type, object sender, object msg)
+    {
+        if (type == MessageType.DAMAGED)
+        {
+            Damageable damageable = sender as Damageable;
+            Damageable.DamageMessage message = (Damageable.DamageMessage)msg;
+            currentHealth -= message.amount;
+
+            if (currentHealth <= 0)
+                ui.ReloadScene();
+
+            ui.SetHealth(currentHealth, totalHealth);
+        }
     }
 }
