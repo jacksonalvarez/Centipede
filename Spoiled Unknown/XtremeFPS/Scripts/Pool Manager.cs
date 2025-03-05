@@ -68,82 +68,101 @@ namespace XtremeFPS.PoolingSystem
             return null;
         }
 
-        public GameObject SpawnObject(GameObject objectToPool, Vector3 position, Quaternion rotation)
+public GameObject SpawnObject(GameObject objectToPool, Vector3 position, Quaternion rotation)
+{
+    // ✅ Validate that the object exists in the pooling system
+    ObjectPoolItem item = FindObjectPoolItem(objectToPool);
+    if (item == null)
+    {
+        Debug.LogWarning($"{objectToPool?.name ?? "Unknown"} passed in SpawnObject() not found in \"itemsToPool\"!");
+        return null;
+    }
+
+    if (!pooledObjects.ContainsKey(objectToPool))
+    {
+        Debug.LogWarning($"{objectToPool?.name ?? "Unknown"} passed in SpawnObject() not found in the Pool!");
+        return null;
+    }
+
+    List<GameObject> objectPool = pooledObjects[objectToPool];
+
+    // ✅ Try to find an inactive object
+    foreach (GameObject obj in objectPool)
+    {
+        if (obj == null)
         {
-            ObjectPoolItem item = FindObjectPoolItem(objectToPool);
-            if (item == null)
-            {
-                Debug.LogWarning($"{objectToPool.name} passed in SpawnObject() not found in the \"itemsToPool\"!");
-                return null;
-            }
+            Debug.LogWarning("A pooled object was destroyed externally! Consider using SetActive(false) instead of Destroy().");
+            continue;
+        }
 
-            if (!pooledObjects.ContainsKey(objectToPool))
-            {
-                Debug.LogWarning($"{objectToPool.name} passed in SpawnObject() not found in the Pool!");
-                return null;
-            }
+        if (!obj.activeInHierarchy)
+        {
+            obj.transform.SetPositionAndRotation(position, rotation);
+            obj.SetActive(true);
+            return obj;
+        }
+    }
 
-            List<GameObject> objectPool = pooledObjects[objectToPool];
-            foreach (GameObject obj in objectPool)
-            {
-                if (obj.activeInHierarchy) continue;
-
-                obj.transform.SetPositionAndRotation(position, rotation);
-                obj.SetActive(true);
-                return obj;
-            }
-
-            if (item.canExpand)
-            {
-                GameObject newObj = Instantiate(objectToPool, position, rotation);
-                GameObject parentGameObject = prefabParents[objectToPool];
-                newObj.transform.parent = parentGameObject.transform;
-                newObj.SetActive(true);
-                objectPool.Add(newObj);
-                return newObj;
-            }
-            else
-            {
-                // Cycle through the pool to recycle objects
-                for (int i = lastRecycledIndex + 1; i < objectPool.Count; i++)
-                {
-                    GameObject recycledObj = objectPool[i];
-                    if (!recycledObj.activeInHierarchy) continue;
-
-                    recycledObj.transform.SetPositionAndRotation(position, rotation);
-                    recycledObj.SetActive(true);
-                    lastRecycledIndex = i;
-                    return recycledObj;
-                }
-                // If no inactive objects are found, loop back to the beginning of the pool
-                for (int i = 0; i < lastRecycledIndex; i++)
-                {
-                    GameObject recycledObj = objectPool[i];
-                    if (!recycledObj.activeInHierarchy) continue;
-
-                    recycledObj.transform.SetPositionAndRotation(position, rotation);
-                    recycledObj.SetActive(true);
-                    lastRecycledIndex = i;
-                    return recycledObj;
-                }
-            }
-
+    // ✅ If expandable, instantiate a new object
+    if (item.canExpand)
+    {
+        if (!prefabParents.ContainsKey(objectToPool))
+        {
+            Debug.LogError($"Prefab parent for {objectToPool.name} is missing! Fix the pooling system.");
             return null;
         }
 
-        public void DespawnObject(GameObject obj)
-        {
-            bool foundInPool = false;
-            foreach (var objectPool in pooledObjects.Values)
-            {
-                if (!objectPool.Contains(obj)) continue;
-
-                obj.SetActive(false);
-                foundInPool = true;
-                break;
-            }
-
-            if (!foundInPool) Debug.LogWarning("The object to return to pool is not managed by the object pool system.");
-        }
+        GameObject newObj = Instantiate(objectToPool, position, rotation);
+        newObj.transform.parent = prefabParents[objectToPool].transform;
+        newObj.SetActive(true);
+        objectPool.Add(newObj);
+        return newObj;
     }
+
+    // ✅ Cycle through to find an object to recycle
+    int startIndex = (lastRecycledIndex + 1) % objectPool.Count;
+    for (int i = 0; i < objectPool.Count; i++)
+    {
+        int index = (startIndex + i) % objectPool.Count;
+        GameObject recycledObj = objectPool[index];
+
+        if (recycledObj == null)
+        {
+            Debug.LogWarning("Skipping a destroyed object in the pool.");
+            continue;
+        }
+
+        // Recycle the object
+        recycledObj.transform.SetPositionAndRotation(position, rotation);
+        recycledObj.SetActive(true);
+        lastRecycledIndex = index;
+        return recycledObj;
+    }
+
+    return null; // No available object
 }
+
+public void DespawnObject(GameObject obj)
+{
+    if (obj == null)
+    {
+        Debug.LogWarning("Tried to despawn a null object.");
+        return;
+    }
+
+    bool foundInPool = false;
+    foreach (var objectPool in pooledObjects.Values)
+    {
+        if (!objectPool.Contains(obj)) continue;
+
+        obj.SetActive(false);
+        obj.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); // ✅ Reset position to avoid lingering effects
+        foundInPool = true;
+        break;
+    }
+
+    if (!foundInPool)
+    {
+        Debug.LogWarning($"The object {obj.name} is not managed by the object pool system.");
+    }
+}}}

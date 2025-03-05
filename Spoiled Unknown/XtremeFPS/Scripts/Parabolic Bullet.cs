@@ -88,19 +88,45 @@ namespace XtremeFPS.WeaponSystem
 
         private void OnHit(RaycastHit hit)
         {
-            if (hit.transform.CompareTag("Enemy") && hit.transform.TryGetComponent(out Damageable damageable))
+            int finalDamage = Mathf.FloorToInt(damage); // Base damage
+
+            // **Check for Enemy Type A**
+            if (hit.transform.CompareTag("Enemy") && hit.transform.TryGetComponent(out Damageable damageableA))
             {
-                int finalDamage = Mathf.FloorToInt(damage); // Cast damage to int
-                damageable.ApplyDamage(new Damageable.DamageMessage()
+                damageableA.ApplyDamage(new Damageable.DamageMessage()
                 {
-                    amount = finalDamage,
+                    amount = finalDamage,  // Full damage
                     damageSource = transform.position
                 });
 
-                Debug.Log($"Bullet hit enemy: {hit.transform.name}, Damage: {finalDamage}");
+                Debug.Log($"Bullet hit Enemy A: {hit.transform.name}, Damage: {finalDamage}");
+            }
+            // **Check for Spider-Enemy (takes half damage and apply force)**
+            else if (hit.transform.CompareTag("Spider-Enemy") && hit.transform.TryGetComponent(out Damageable damageableB))
+            {
+                int reducedDamage = Mathf.FloorToInt(finalDamage);  // Half damage
+                damageableB.ApplyDamage(new Damageable.DamageMessage()
+                {
+                    amount = reducedDamage,
+                    damageSource = transform.position
+                });
+
+                // Apply force to Spider-Enemy if it has a Rigidbody
+Rigidbody spiderRigidbody = hit.transform.GetComponent<Rigidbody>();
+if (spiderRigidbody != null)
+{
+    // Calculate impact direction (mostly forward with a slight upward lift)
+    Vector3 forceDirection = (hit.transform.position - transform.position).normalized;
+    forceDirection += Vector3.up * 0.2f; // Adds a slight lift effect
+
+    // Apply a more realistic bullet force
+    spiderRigidbody.AddForce(forceDirection * 2f, ForceMode.Impulse); // Reduced from 10f to 2f
+}
+
+                Debug.Log($"Bullet hit Spider-Enemy: {hit.transform.name}, Damage: {reducedDamage}");
             }
 
-            // Spawn impact particles
+            // **Spawn impact particles**
             GameObject hitEffect = PoolManager.Instance.SpawnObject(particlesPrefab, hit.point + hit.normal * 0.05f, Quaternion.LookRotation(hit.normal));
             hitEffect.transform.parent = hit.transform;
 

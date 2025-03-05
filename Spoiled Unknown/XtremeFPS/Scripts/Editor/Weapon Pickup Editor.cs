@@ -1,79 +1,150 @@
 ﻿/*Copyright © Spoiled Unknown*/
 /*2024*/
-/*Note: This is an important editor script*/
 
 using TMPro;
-using UnityEditor;
 using UnityEngine;
+using XtremeFPS.Interfaces;
 
-namespace XtremeFPS.Editor
+namespace XtremeFPS.WeaponSystem.Pickup
 {
-    using XtremeFPS.WeaponSystem.Pickup;
-    using XtremeFPS.WeaponSystem;
-
-    [CustomEditor(typeof(WeaponPickup)), CanEditMultipleObjects]
-    public class WeaponPickupEditor : UnityEditor.Editor
+    [RequireComponent(typeof(UniversalWeaponSystem))]
+    [RequireComponent(typeof(BoxCollider))]
+    [AddComponentMenu("Spoiled Unknown/XtremeFPS/Weapon Pickup")]
+    public class WeaponPickup : MonoBehaviour, IPickup
     {
-        WeaponPickup weaponPickup;
-        SerializedObject serWeaponPickup;
+        // Once the gun is picked up for the first time, this flag remains true.
+        public bool NoLongerGunDrop { get; private set; } = false;
+        // This is assigned by WeaponDrop to set the initial spawn (drop) position.
+        public Transform gunDropPosition; 
 
+        #region Variables
+        public static bool IsWeaponEquipped { get; private set; }
+        public CharacterController playerArmature;
+        public Transform weaponHolder;       // Player’s gun position (hand)
+        public Transform cameraRoot;
+        public TextMeshProUGUI bulletText;
 
-        private void OnEnable()
+        public bool equipped;
+        public int Priority;
+        public float dropForwardForce;
+        public float dropUpwardForce;
+        public float dropTorqueMultiplier;
+
+        private UniversalWeaponSystem weaponSystem;
+        private BoxCollider Collider;
+        private Rigidbody rb;
+        #endregion
+
+        #region Monobehaviour Callbacks
+        private void Start()
         {
-            weaponPickup = (WeaponPickup)target;
-            serWeaponPickup = new SerializedObject(weaponPickup);
-        }
+            Collider = GetComponent<BoxCollider>();
+            weaponSystem = GetComponent<UniversalWeaponSystem>();
 
-        public override void OnInspectorGUI()
-        {
-            serWeaponPickup.Update();
-            #region Intro
-            EditorGUILayout.Space();
-            GUI.color = Color.black;
-            GUILayout.Label("Xtreme FPS Controller", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 16 });
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-            GUI.color = Color.green;
-            GUILayout.Label("Weapon Pickup Script", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 16 });
-            EditorGUILayout.Space();
-            #endregion
-            #region References
-            GUI.color = Color.black;
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-            GUILayout.Label("References", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-            EditorGUILayout.Space();
-
-            //Main Movement Settings
-            GUI.color = Color.white;
-            weaponPickup.playerArmature = (CharacterController)EditorGUILayout.ObjectField(new GUIContent("Player Armature", "Reference to the character controller of the player."), weaponPickup.playerArmature, typeof(CharacterController), true);
-            weaponPickup.weaponHolder = (Transform)EditorGUILayout.ObjectField(new GUIContent("Weapon Position", "Reference to the just parent of the weapon (can be weapon holder or weapon recoil(weapon recoild in our case))."), weaponPickup.weaponHolder, typeof(Transform), true);
-            weaponPickup.cameraRoot = (Transform)EditorGUILayout.ObjectField(new GUIContent("camera Root", "Reference to the camera root."), weaponPickup.cameraRoot, typeof(Transform), true);
-            weaponPickup.bulletText = (TextMeshProUGUI)EditorGUILayout.ObjectField(new GUIContent("Bullet Text", "Reference to the text that shows number of bullets on UI."), weaponPickup.bulletText, typeof(TextMeshProUGUI), true);
-            EditorGUILayout.Space();
-            #endregion
-
-            #region Values
-            GUI.color = Color.black;
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-            GUILayout.Label("Values", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-            EditorGUILayout.Space();
-
-            GUI.color = Color.white;
-            weaponPickup.equipped = EditorGUILayout.ToggleLeft(new GUIContent("Is Weapon Equiped", "Determines if the weapon is already equiped at the start of game  or not."), weaponPickup.equipped);
-            weaponPickup.dropForwardForce = EditorGUILayout.Slider(new GUIContent("Forward Force", "Determines the force at which the weapon will be thrown forward."), weaponPickup.dropForwardForce, 0f, 50f);
-            weaponPickup.dropUpwardForce = EditorGUILayout.Slider(new GUIContent("Upward Force", "Determines the force at which the weapon will be thrown upward."), weaponPickup.dropUpwardForce, 0f, 50f);
-            weaponPickup.dropTorqueMultiplier = EditorGUILayout.Slider(new GUIContent("Torque Multiplier", "Determines the value at which the torque will be multiplied."), weaponPickup.dropTorqueMultiplier, 0f, 50f);
-            EditorGUILayout.Space();
-            #endregion
-            #region Update Changes
-            //Sets any changes from the prefab
-            if (GUI.changed)
+            // If the weapon hasn't been picked up yet, position it at its drop location.
+            if (!NoLongerGunDrop)
             {
-                EditorUtility.SetDirty(weaponPickup);
-                Undo.RecordObject(weaponPickup, "Weapon Pickup Change");
-                serWeaponPickup.ApplyModifiedProperties();
+                transform.SetParent(gunDropPosition);
+                transform.position = gunDropPosition.position;
+                transform.rotation = gunDropPosition.rotation;
+                if (!gameObject.TryGetComponent<Rigidbody>(out rb))
+                {
+                    rb = gameObject.AddComponent<Rigidbody>();
+                }
+                rb.isKinematic = true;  // Disable physics until pickup.
             }
-            #endregion
+
+            if (equipped)
+                Equip();
+            else
+                UnEquip();
         }
+        #endregion
+
+        #region Private methods
+        private void UnEquip()
+        {
+            // Called when dropping the weapon.
+            if (!gameObject.TryGetComponent<Rigidbody>(out rb))
+            {
+                rb = gameObject.AddComponent<Rigidbody>();
+            }
+            rb.isKinematic = false;  // Enable physics so gravity and forces act normally.
+            weaponSystem.enabled = false;
+            Collider.isTrigger = false;
+            equipped = false;
+            IsWeaponEquipped = false;
+        }
+
+        private void Equip()
+        {
+            // Called when the weapon is picked up.
+            if (rb != null)
+            {
+                // Removing the Rigidbody stops unwanted physics forces while held.
+                Destroy(rb);
+            }
+            equipped = true;
+            weaponSystem.enabled = true;
+            Collider.isTrigger = true;
+            IsWeaponEquipped = true;
+        }
+
+        public void PickUp()
+        {
+            // On the very first pickup, mark that it's no longer in the drop state.
+            if (!NoLongerGunDrop)
+            {
+                NoLongerGunDrop = true;
+            }
+
+            // Reparent the weapon to the player's gun position (weaponHolder) with zero offset.
+            transform.SetParent(weaponHolder);
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+
+            // Ensure a Rigidbody exists and disable physics while held.
+            if (!gameObject.TryGetComponent<Rigidbody>(out rb))
+            {
+                rb = gameObject.AddComponent<Rigidbody>();
+            }
+            rb.isKinematic = true;
+
+            Equip();
+        }
+
+        public void Drop()
+        {
+            // Drop the weapon using the unequip process.
+            UnEquip();
+            bulletText.SetText("00 / 00");
+            transform.SetParent(null); // Detach from the player's gun position.
+
+            // Ensure we have a Rigidbody and re-enable physics.
+            if (!gameObject.TryGetComponent<Rigidbody>(out rb))
+            {
+                rb = gameObject.AddComponent<Rigidbody>();
+            }
+            rb.isKinematic = false;  // Physics enabled so gravity and forces take effect.
+
+            // Apply the player's current velocity and additional forces for a realistic throw.
+            rb.velocity = playerArmature.velocity;
+            rb.AddForce(cameraRoot.forward * dropForwardForce, ForceMode.Impulse);
+            rb.AddForce(cameraRoot.up * dropUpwardForce, ForceMode.Impulse);
+
+            float random = Random.Range(-1f, 1f);
+            rb.AddTorque(new Vector3(random, random, random) * dropTorqueMultiplier);
+        }
+
+        public bool IsEquiped()
+        {
+            return equipped;
+        }
+
+        public Transform GetTransform()
+        {
+            return transform;
+        }
+        #endregion
     }
 }
-

@@ -1,78 +1,43 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 
 public partial class Damageable : MonoBehaviour
 {
+    [SerializeField] public int maxHitPoints;
+    public int currentHitPoints;
+    [SerializeField] private bool isInvulnerable;
+    [SerializeField] private bool isHealing;
+    [SerializeField] private bool isBoss;
+    [SerializeField] private bool isFinalBoss;
+    [SerializeField] private bool isDestructibleObject;
+    [SerializeField] private bool isLava;
+    [SerializeField] private bool isBoulder;
+    [SerializeField] private bool isTree;
+    [SerializeField] private bool isSpider;
+    [SerializeField] private bool isPlant;
 
-    public int maxHitPoints;
-    [Tooltip("Time that this gameObject is invulnerable for, after receiving damage.")]
-    public float invulnerabiltyTime;
+    public bool IsHealing => isHealing;
+    public bool IsBoss => isBoss;
+    public bool IsFinalBoss => isFinalBoss;
+    public bool IsDestructibleObject => isDestructibleObject;
+    public bool IsLava => isLava;
+    public bool IsBoulder => isBoulder;
+    public bool IsTree => isTree;
+    public bool IsSpider => isSpider;
+    public bool IsPlant => isPlant;
 
+    public UnityEvent OnDeath, OnHitWhileInvulnerable, OnReceiveDamage, OnHeal, OnFullyHealed;
 
-    [Tooltip("The angle from the which that damageable is hitable. Always in the world XZ plane, with the forward being rotate by hitForwardRoation")]
-    [Range(0.0f, 360.0f)]
-    public float hitAngle = 360.0f;
-    [Tooltip("Allow to rotate the world forward vector of the damageable used to define the hitAngle zone")]
-    [Range(0.0f, 360.0f)]
-    [FormerlySerializedAs("hitForwardRoation")] //SHAME!
-    public float hitForwardRotation = 360.0f;
-
-    public bool isInvulnerable { get; set; }
-    public int currentHitPoints { get; private set; }
-
-    public UnityEvent OnDeath, OnReceiveDamage, OnHitWhileInvulnerable, OnBecomeVulnerable, OnResetDamage;
-
-    [Tooltip("When this gameObject is damaged, these other gameObjects are notified.")]
-    [EnforceType(typeof(IMessageReceiver))]
-    public List<MonoBehaviour> onDamageMessageReceivers;
-
-    protected float m_timeSinceLastHit = 0.0f;
-    protected Collider m_Collider;
-
-    System.Action schedule;
-
-    void Start()
+    private void Awake()
     {
         ResetDamage();
-        m_Collider = GetComponent<Collider>();
-    }
-
-    void Update()
-    {
-        if (isInvulnerable)
-        {
-            m_timeSinceLastHit += Time.deltaTime;
-            if (m_timeSinceLastHit > invulnerabiltyTime)
-            {
-                m_timeSinceLastHit = 0.0f;
-                isInvulnerable = false;
-                OnBecomeVulnerable.Invoke();
-            }
-        }
-    }
-
-    public void ResetDamage()
-    {
-        currentHitPoints = maxHitPoints;
-        isInvulnerable = false;
-        m_timeSinceLastHit = 0.0f;
-        OnResetDamage.Invoke();
-    }
-
-    public void SetColliderState(bool enabled)
-    {
-        m_Collider.enabled = enabled;
     }
 
     public void ApplyDamage(DamageMessage data)
     {
-        if (currentHitPoints <= 0)
-        {//ignore damage if already dead. 
-            return;
-        }
+        Debug.Log($"Damage applied: {data.amount}, Spider HP before: {currentHitPoints}");
 
         if (isInvulnerable)
         {
@@ -80,59 +45,54 @@ public partial class Damageable : MonoBehaviour
             return;
         }
 
-        Vector3 forward = transform.forward;
-        forward = Quaternion.AngleAxis(hitForwardRotation, transform.up) * forward;
-
-        //we project the direction to damager to the plane formed by the direction of damage
-        Vector3 positionToDamager = data.damageSource - transform.position;
-        positionToDamager -= transform.up * Vector3.Dot(transform.up, positionToDamager);
-
-        if (Vector3.Angle(forward, positionToDamager) > hitAngle * 0.5f)
-            return;
-
-        isInvulnerable = true;
         currentHitPoints -= data.amount;
 
-        if (currentHitPoints <= 0)
-            OnDeath.Invoke();
-        else
-            OnReceiveDamage.Invoke();
-
-        var messageType = currentHitPoints <= 0 ? MessageType.DEAD : MessageType.DAMAGED;
-
-        for (var i = 0; i < onDamageMessageReceivers.Count; ++i)
+        if (gameObject.GetComponent<SpiderIK>() != null)
         {
-            var receiver = onDamageMessageReceivers[i] as IMessageReceiver;
-            receiver.OnReceiveMessage(messageType, this, data);
+            Debug.Log("Spidey Health after damage:" + currentHitPoints);
+
+            if (currentHitPoints <= 0)
+            {
+                Debug.Log("Spidey is dead.");
+                OnSpiderDeath();
+                return;
+            }
         }
+
+        OnReceiveDamage.Invoke();
     }
 
-    void LateUpdate()
+    public void Heal(int amount)
     {
-        if (schedule != null)
+        if (currentHitPoints <= 0) return;
+
+        currentHitPoints += amount;
+        OnHeal.Invoke();
+
+        if (currentHitPoints >= maxHitPoints)
         {
-            schedule();
-            schedule = null;
+            currentHitPoints = maxHitPoints;
+            OnFullyHealed.Invoke();
         }
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    public void ResetDamage()
     {
-        Vector3 forward = transform.forward;
-        forward = Quaternion.AngleAxis(hitForwardRotation, transform.up) * forward;
-
-        if (Event.current.type == EventType.Repaint)
-        {
-            UnityEditor.Handles.color = Color.blue;
-            UnityEditor.Handles.ArrowHandleCap(0, transform.position, Quaternion.LookRotation(forward), 1.0f,
-                EventType.Repaint);
-        }
-
-
-        UnityEditor.Handles.color = new Color(1.0f, 0.0f, 0.0f, 0.5f);
-        forward = Quaternion.AngleAxis(-hitAngle * 0.5f, transform.up) * forward;
-        UnityEditor.Handles.DrawSolidArc(transform.position, transform.up, forward, hitAngle, 1.0f);
+        currentHitPoints = maxHitPoints;
     }
-#endif
+
+    public void SetIsInvulnerable(bool isInvulnerable)
+    {
+        this.isInvulnerable = isInvulnerable;
+    }
+
+    public void OnWormDeath(){
+        Debug.Log("Worm Died...");
+        Destroy(gameObject);
+    }
+    public void OnSpiderDeath()
+    {
+        Debug.Log("Destroying spider...");
+        Destroy(gameObject);
+    }
 }
