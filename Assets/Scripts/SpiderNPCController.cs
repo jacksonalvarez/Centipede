@@ -51,6 +51,9 @@ public class SpiderNPCController : MonoBehaviour
     public float chaseDurationAfterJump = 5f;
     public float damageInterval = 1f;
 
+    [Header("Death Settings")]
+    public GameObject ragdollPrefab;
+
     private void Awake()
     {
         projectilePrefab = GameObject.Find("Spit-Ball");
@@ -246,5 +249,31 @@ public class SpiderNPCController : MonoBehaviour
             Random.Range(-predictionInaccuracy, predictionInaccuracy)
         );
         return predictedPos;
+    }
+
+    public void Die()
+    {
+        if (ragdollPrefab != null)
+        {
+            GameObject ragdoll = Instantiate(ragdollPrefab, transform.position, transform.rotation);
+            ragdoll.transform.localScale = transform.localScale; // Match the scale of the spider
+
+            Rigidbody spiderRb = GetComponent<Rigidbody>();
+            if (spiderRb != null)
+            {
+                Rigidbody ragdollRb = ragdoll.GetComponent<Rigidbody>();
+                if (ragdollRb != null)
+                {
+                    ragdollRb.velocity = spiderRb.velocity;
+                    ragdollRb.angularVelocity = spiderRb.angularVelocity;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Ragdoll prefab is not assigned!");
+        }
+
+        Destroy(gameObject);
     }
 }

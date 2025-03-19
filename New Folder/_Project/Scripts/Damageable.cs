@@ -90,9 +90,20 @@ public partial class Damageable : MonoBehaviour
         Debug.Log("Worm Died...");
         Destroy(gameObject);
     }
+
     public void OnSpiderDeath()
     {
         Debug.Log("Destroying spider...");
-        Destroy(gameObject);
+
+        SpiderNPCController spiderController = GetComponent<SpiderNPCController>();
+        if (spiderController != null)
+        {
+            spiderController.Die();
+        }
+        else
+        {
+            Debug.LogError("SpiderNPCController not found on spider!");
+            Destroy(gameObject);
+        }
     }
 }

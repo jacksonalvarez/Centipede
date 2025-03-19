@@ -2868,6 +2868,7 @@ MonoBehaviour:
   rangedPreferredDistance: 15
   chaseDurationAfterJump: 5
   damageInterval: 1
+  ragdollPrefab: {fileID: 7266378469860779156, guid: 5b70f94ec715aab438488e6800effc60, type: 3}
 --- !u!114 &5550338486155097867
 MonoBehaviour:
   m_ObjectHideFlags: 0
