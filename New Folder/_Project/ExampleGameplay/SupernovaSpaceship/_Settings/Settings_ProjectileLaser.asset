@@ -16,4 +16,4 @@ MonoBehaviour:
   autoRemoveCountdown: 5
   layerMask:
     serializedVersion: 2
-    m_Bits: 513
+    m_Bits: 1

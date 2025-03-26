@@ -1,51 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ProjectileBehaviour : MonoBehaviour
 {
-    [Header("Settings")]
-    public ProjectileData data;
-
-    void OnEnable()
+    void OnTriggerEnter(Collider other)
     {
-        StartCoroutine(TimerToAutoRemoveProjectile());
-    }
+        if (!other.CompareTag("Enemy")) return; // Ignore everything except enemies
 
-    void FixedUpdate()
-    {
-        Vector3 tempPos = transform.position;
-        MoveProjectile();
-        if (Physics.Linecast(tempPos, transform.position, out RaycastHit hitInfo, data.layerMask))
+        if (other.TryGetComponent(out Damageable damageable))
         {
-            RemoveProjectile();
-            if (hitInfo.transform.CompareTag("Enemy") && hitInfo.transform.TryGetComponent(out Damageable damageable))
+            Debug.Log("Hit Enemy: " + other.name);
+            damageable.ApplyDamage(new Damageable.DamageMessage()
             {
-                damageable.ApplyDamage(new Damageable.DamageMessage()
-                {
-                    amount = 1,
-                    damageSource = transform.position
-                });
-            }
+                amount = 1,
+                damageSource = transform.position
+            });
         }
 
     }
 
-    void MoveProjectile()
-    {
-        Vector3 tempVect = transform.forward * data.movementSpeed * Time.deltaTime;
-        transform.position += tempVect;
-    }
-
-    IEnumerator TimerToAutoRemoveProjectile()
-    {
-        yield return new WaitForSeconds(data.autoRemoveCountdown);
-        RemoveProjectile();
-    }
-
     void RemoveProjectile()
     {
+        Debug.Log("Projectile Removed");
         gameObject.SetActive(false);
     }
-
 }
