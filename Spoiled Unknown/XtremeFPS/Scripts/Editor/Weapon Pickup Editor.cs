@@ -128,7 +128,7 @@ namespace XtremeFPS.WeaponSystem.Pickup
             rb.isKinematic = false;  // Physics enabled so gravity and forces take effect.
 
             // Apply the player's current velocity and additional forces for a realistic throw.
-            rb.velocity = playerArmature.velocity;
+            rb.linearVelocity = playerArmature.velocity;
             rb.AddForce(cameraRoot.forward * dropForwardForce, ForceMode.Impulse);
             rb.AddForce(cameraRoot.up * dropUpwardForce, ForceMode.Impulse);
 

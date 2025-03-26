@@ -64,6 +64,30 @@ PrefabInstance:
       propertyPath: playerArmature
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Size.x
+      value: 1.3370357
+      objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Size.y
+      value: 0.35798597
+      objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Size.z
+      value: 0.2498168
+      objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Center.x
+      value: -0.24435806
+      objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Center.y
+      value: 0.02646041
+      objectReference: {fileID: 0}
+    - target: {fileID: 5864498854658109295, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
+      propertyPath: m_Center.z
+      value: -0.008967221
+      objectReference: {fileID: 0}
     - target: {fileID: 6170424704145857850, guid: 2d60990fe6e1fb54d8681367adabe8fa, type: 3}
       propertyPath: aimUIImage
       value: 

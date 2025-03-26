@@ -35,11 +35,6 @@ public class Player : MonoBehaviour {
     public AudioSource gunAudioSource;
     public AudioClip gunShotClip;
 
-    public int maxHealth = 100;
-    public int currentHealth;
-
-    public HealthBar healthBar;
-
     // Other
     public bool drinksWater = false;
 
@@ -55,9 +50,6 @@ public class Player : MonoBehaviour {
         if (gunAudioSource == null) {
             gunAudioSource = gameObject.AddComponent<AudioSource>();
         }
-
-        currentHealth = maxHealth;
-        healthBar.SetMaxHealth(maxHealth);
     }
 
     private void Update() {
@@ -73,20 +65,6 @@ public class Player : MonoBehaviour {
                 HandleFire();
             }
         }
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            TakeDamage(10);
-        }
-    }
-
-    void TakeDamage(int damage)
-    {
-        currentHealth -= damage;
-        healthBar.SetHealth(currentHealth);
     }
 
     private void HandleCameraLook() {

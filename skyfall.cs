@@ -27,7 +27,7 @@ public class Skyfall : MonoBehaviour
     void Update()
     {
         // Apply downward movement
-        rb.velocity = new Vector3(0, -fallSpeed, 0);
+        rb.linearVelocity = new Vector3(0, -fallSpeed, 0);
 
         // Trigger atmosphere effect at a certain height
         if (!atmosphereEffectTriggered && transform.position.y <= atmosphereHeight)

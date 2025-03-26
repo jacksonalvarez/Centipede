@@ -207,7 +207,7 @@ public class SpiderNPCController : MonoBehaviour
         if (rb != null)
         {
             rb.useGravity = false;
-            rb.velocity = (predictedPos - projectileSpawnPoint.position).normalized * projectileSpeed;
+            rb.linearVelocity = (predictedPos - projectileSpawnPoint.position).normalized * projectileSpeed;
         }
         else
         {
@@ -242,7 +242,7 @@ public class SpiderNPCController : MonoBehaviour
         Rigidbody playerRb = player.GetComponent<Rigidbody>();
         if (playerRb == null) return player.position;
 
-        Vector3 predictedPos = player.position + (playerRb.velocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
+        Vector3 predictedPos = player.position + (playerRb.linearVelocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
         predictedPos += new Vector3(
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
@@ -264,7 +264,7 @@ public class SpiderNPCController : MonoBehaviour
                 Rigidbody ragdollRb = ragdoll.GetComponent<Rigidbody>();
                 if (ragdollRb != null)
                 {
-                    ragdollRb.velocity = spiderRb.velocity;
+                    ragdollRb.linearVelocity = spiderRb.linearVelocity;
                     ragdollRb.angularVelocity = spiderRb.angularVelocity;
                 }
             }
