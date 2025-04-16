@@ -12,6 +12,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: AK-47 Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Size.x
+      value: 1.1226193
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Size.y
+      value: 0.340289
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Size.z
+      value: 0.18926995
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Center.x
+      value: -0.075077176
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Center.y
+      value: -0.024769604
+      objectReference: {fileID: 0}
+    - target: {fileID: 4573774880330676004, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
+      propertyPath: m_Center.z
+      value: 0.00092059374
+      objectReference: {fileID: 0}
     - target: {fileID: 5941598614821741515, guid: 70acddad957ae5645abdecf3ec972d07, type: 3}
       propertyPath: bulletCount
       value: 

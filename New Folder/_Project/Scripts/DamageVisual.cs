@@ -66,7 +66,7 @@ public class DamageVisual : MonoBehaviour
     Quaternion lastRotation = transform.rotation;
     Debug.Log("Spider rotation: " + lastRotation + " (S22-1)");
 
-    Vector3 lastVelocity = spiderRootRigidbody != null ? spiderRootRigidbody.velocity : Vector3.zero;
+    Vector3 lastVelocity = spiderRootRigidbody != null ? spiderRootRigidbody.linearVelocity : Vector3.zero;
     Debug.Log("Spider velocity: " + lastVelocity + " (S22-2)");
 
     Vector3 lastAngularVelocity = spiderRootRigidbody != null ? spiderRootRigidbody.angularVelocity : Vector3.zero;

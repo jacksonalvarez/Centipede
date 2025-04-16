@@ -147,7 +147,7 @@ public class WormAI : MonoBehaviour, IMessageReceiver
 
         // Get the player's Rigidbody for velocity
         Rigidbody playerRb = player.GetComponent<Rigidbody>();
-        Vector3 playerVelocity = playerRb != null ? playerRb.velocity : Vector3.zero;
+        Vector3 playerVelocity = playerRb != null ? playerRb.linearVelocity : Vector3.zero;
 
         // Fire the laser for 4 seconds while tracking the player
         while (elapsedTime < fireDuration)

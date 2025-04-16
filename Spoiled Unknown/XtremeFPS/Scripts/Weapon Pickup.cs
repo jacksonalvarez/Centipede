@@ -132,7 +132,7 @@ namespace XtremeFPS.WeaponSystem.Pickup
             transform.SetParent(null);
 
             // When dropped, enable physics and apply forces.
-            rb.velocity = playerArmature.velocity;
+            rb.linearVelocity = playerArmature.velocity;
             rb.AddForce(cameraRoot.forward * dropForwardForce, ForceMode.Impulse);
             rb.AddForce(cameraRoot.up * dropUpwardForce, ForceMode.Impulse);
 

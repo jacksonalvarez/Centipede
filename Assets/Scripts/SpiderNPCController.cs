@@ -40,10 +40,20 @@ public class SpiderNPCController : MonoBehaviour
     public float jumpCooldown = 1f;
     private bool canJump = true;
 
+    [Header("Sound Effects")]
+    [SerializeField] private AudioClip walkingSound;
+    [SerializeField] private AudioClip leechAttackSound;
+    [SerializeField] private AudioClip projectileAttackSound;
+    [SerializeField] private AudioClip jumpSound;
+    [SerializeField] private AudioSource audioSource;
+    private float walkingSoundInterval = 0.3f;
+    private float lastWalkSoundTime;
+
     private bool isLeeching = false;
     private bool isAttacking = false;
     private bool prefersLeechAttack = false;
     private int totalPlayerDamage = 0;
+    private bool isWalking = false;
 
     [Header("Leech Attack Settings")]
     public float leechApproachDistance = 11f;
@@ -63,6 +73,15 @@ public class SpiderNPCController : MonoBehaviour
             Debug.LogError("Player not found. Make sure the player is tagged with 'Player'.");
 
         prefersLeechAttack = Random.value < 0.5f;
+        
+        // Create audio source if not assigned
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.spatialBlend = 1f; // Full 3D sound
+            audioSource.minDistance = 2f;
+            audioSource.maxDistance = 20f;
+        }
     }
 
     private void FixedUpdate()
@@ -81,6 +100,16 @@ public class SpiderNPCController : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // Handle walking sound
+        if (isWalking && Time.time > lastWalkSoundTime + walkingSoundInterval)
+        {
+            PlaySound(walkingSound, 0.5f);
+            lastWalkSoundTime = Time.time;
+        }
+    }
+
     private void HandleLeechingBehavior(float distanceToPlayer, Vector3 directionToPlayer)
     {
         if (!isLeeching)
@@ -93,6 +122,7 @@ public class SpiderNPCController : MonoBehaviour
             {
                 spider.walk(directionToPlayer);
                 spider.turn(directionToPlayer);
+                isWalking = true;
             }
         }
     }
@@ -104,13 +134,16 @@ public class SpiderNPCController : MonoBehaviour
             if (distanceToPlayer > rangedPreferredDistance)
             {
                 spider.walk(directionToPlayer);
+                isWalking = true;
             }
             else if (distanceToPlayer < rangedPreferredDistance - 2f)
             {
                 spider.walk(-directionToPlayer);
+                isWalking = true;
             }
             else
             {
+                isWalking = false;
                 StartCoroutine(PerformProjectileAttack());
             }
             spider.turn(directionToPlayer);
@@ -124,6 +157,9 @@ public class SpiderNPCController : MonoBehaviour
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
+            // Play jump sound
+            PlaySound(jumpSound, 0.7f);
+            
             Vector3 direction = (targetPosition - transform.position).normalized;
             Vector3 jumpForceVector = direction * jumpForce;
             jumpForceVector.y = jumpForce;
@@ -141,6 +177,9 @@ public class SpiderNPCController : MonoBehaviour
 
     private void ApplyLeechDamage()
     {
+        // Play leech attack sound when damage is applied
+        PlaySound(leechAttackSound, 1.0f);
+        
         totalPlayerDamage += (int)leechDamagePerSecond;
         Debug.Log($"Leeching Player! Total damage: {totalPlayerDamage}");
     }
@@ -164,6 +203,7 @@ public class SpiderNPCController : MonoBehaviour
             Vector3 directionToPlayer = (player.position - transform.position).normalized;
             spider.walk(directionToPlayer);
             spider.turn(directionToPlayer);
+            isWalking = true;
 
             if (Vector3.Distance(transform.position, player.position) < 1f)
             {
@@ -184,8 +224,9 @@ public class SpiderNPCController : MonoBehaviour
     private IEnumerator PerformProjectileAttack()
     {
         isAttacking = true;
+        isWalking = false;
 
-        yield return new WaitForSeconds(attackCooldown);
+        yield return new WaitForSeconds(attackCooldown * 0.5f);
 
         if (player == null)
         {
@@ -200,6 +241,12 @@ public class SpiderNPCController : MonoBehaviour
             yield break;
         }
 
+        // Play projectile attack sound before launching
+        PlaySound(projectileAttackSound, 0.8f);
+        
+        // Small delay after sound before actually launching projectile
+        yield return new WaitForSeconds(0.2f);
+
         Vector3 predictedPos = PredictPlayerPosition();
         GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
@@ -207,7 +254,7 @@ public class SpiderNPCController : MonoBehaviour
         if (rb != null)
         {
             rb.useGravity = false;
-            rb.velocity = (predictedPos - projectileSpawnPoint.position).normalized * projectileSpeed;
+            rb.linearVelocity = (predictedPos - projectileSpawnPoint.position).normalized * projectileSpeed;
         }
         else
         {
@@ -216,7 +263,7 @@ public class SpiderNPCController : MonoBehaviour
 
         Destroy(projectile, 5f);
 
-        yield return new WaitForSeconds(attackCooldown);
+        yield return new WaitForSeconds(attackCooldown * 0.5f);
 
         PickNewRangedPosition();
         isAttacking = false;
@@ -235,6 +282,7 @@ public class SpiderNPCController : MonoBehaviour
 
         spider.walk(moveDirection);
         spider.turn(moveDirection);
+        isWalking = true;
     }
 
     private Vector3 PredictPlayerPosition()
@@ -242,13 +290,22 @@ public class SpiderNPCController : MonoBehaviour
         Rigidbody playerRb = player.GetComponent<Rigidbody>();
         if (playerRb == null) return player.position;
 
-        Vector3 predictedPos = player.position + (playerRb.velocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
+        Vector3 predictedPos = player.position + (playerRb.linearVelocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
         predictedPos += new Vector3(
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
             Random.Range(-predictionInaccuracy, predictionInaccuracy)
         );
         return predictedPos;
+    }
+    
+    // Helper method to play sounds with volume control
+    private void PlaySound(AudioClip clip, float volume = 1.0f)
+    {
+        if (clip == null || audioSource == null) return;
+        
+        audioSource.pitch = Random.Range(0.9f, 1.1f); // Add slight pitch variation
+        audioSource.PlayOneShot(clip, volume);
     }
 
     public void Die()
@@ -264,7 +321,7 @@ public class SpiderNPCController : MonoBehaviour
                 Rigidbody ragdollRb = ragdoll.GetComponent<Rigidbody>();
                 if (ragdollRb != null)
                 {
-                    ragdollRb.velocity = spiderRb.velocity;
+                    ragdollRb.linearVelocity = spiderRb.linearVelocity;
                     ragdollRb.angularVelocity = spiderRb.angularVelocity;
                 }
             }

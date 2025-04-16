@@ -530,7 +530,7 @@ namespace XtremeFPS.FPSController
         private void InteractionHandling()
         {
             if (!inputManager.isTryingToInteract) return;
-            Collider[] colliders = Physics.OverlapSphere(transform.position, interactionRange, (1 << interactionLayersID));
+            Collider[] colliders = Physics.OverlapSphere(transform.position, interactionRange * 1.5f, (1 << interactionLayersID));
 
             foreach (Collider collider in colliders)
             {

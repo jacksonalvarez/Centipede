@@ -8,6 +8,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Size.x
+      value: 1.1110836
+      objectReference: {fileID: 0}
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Size.y
+      value: 0.355927
+      objectReference: {fileID: 0}
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Size.z
+      value: 0.26235953
+      objectReference: {fileID: 0}
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Center.x
+      value: -0.14200217
+      objectReference: {fileID: 0}
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Center.y
+      value: -0.0016877651
+      objectReference: {fileID: 0}
+    - target: {fileID: 4862417669674616978, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
+      propertyPath: m_Center.z
+      value: -0.024576887
+      objectReference: {fileID: 0}
     - target: {fileID: 8972059624727554837, guid: 061c6cf7daadf244ea473dbb9b51bf13, type: 3}
       propertyPath: m_Name
       value: 870_Shotgun Variant

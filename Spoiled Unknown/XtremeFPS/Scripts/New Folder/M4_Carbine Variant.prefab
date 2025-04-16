@@ -59,6 +59,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -86,7 +89,7 @@ MeshRenderer:
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!95 &8044508383949530793
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -100,6 +103,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -158,25 +162,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHitPoints: 0
-  invulnerabiltyTime: 0
-  hitAngle: 360
-  hitForwardRotation: 360
+  currentHitPoints: 0
+  isInvulnerable: 0
+  isHealing: 0
+  isBoss: 0
+  isFinalBoss: 0
+  isDestructibleObject: 0
+  isLava: 0
+  isBoulder: 0
+  isTree: 0
+  isSpider: 0
+  isPlant: 0
   OnDeath:
-    m_PersistentCalls:
-      m_Calls: []
-  OnReceiveDamage:
     m_PersistentCalls:
       m_Calls: []
   OnHitWhileInvulnerable:
     m_PersistentCalls:
       m_Calls: []
-  OnBecomeVulnerable:
+  OnReceiveDamage:
     m_PersistentCalls:
       m_Calls: []
-  OnResetDamage:
+  OnHeal:
     m_PersistentCalls:
       m_Calls: []
-  onDamageMessageReceivers: []
+  OnFullyHealed:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!82 &5689900361131148108
 AudioSource:
   m_ObjectHideFlags: 0
@@ -188,6 +199,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -369,8 +381,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.9, y: 0.27, z: 0.07}
-  m_Center: {x: -0.13, y: -0.01, z: 0}
+  m_Size: {x: 1.071716, y: 0.43248796, z: 0.3202208}
+  m_Center: {x: -0.10956192, y: 0.027361155, z: -0.0037334263}
 --- !u!114 &7604954758760443692
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5212,6 +5224,9 @@ ParticleSystemRenderer:
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
