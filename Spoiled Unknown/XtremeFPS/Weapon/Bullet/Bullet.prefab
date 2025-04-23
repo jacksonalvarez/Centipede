@@ -220,9 +220,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4305618158323128}
   - component: {fileID: 114703794382702018}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bullet
-  m_TagString: Untagged
+  m_TagString: bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -237,8 +237,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.592038, y: -4.666678, z: 2.4618905}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.23, y: 0.23, z: 0.23}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4773390973869664}
   m_Father: {fileID: 0}
@@ -255,4 +255,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c96f3f4412e778468ca37c70b1e20da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spiderEffectPrefab: {fileID: 8739104141292050394, guid: ffea11014f790f2459d2d51eb337b567, type: 3}
+  aaaa: {fileID: 0}

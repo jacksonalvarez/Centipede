@@ -49,6 +49,8 @@ namespace XtremeFPS.InputHandling
         [HideInInspector] public bool isAimingTapped;
         [HideInInspector] public bool isTryingToInteract;
 
+        [HideInInspector] public bool isDashing; // Add this property to track dash input
+
         #region Touch Controls
         public enum TouchDetectMode
         {
@@ -167,6 +169,11 @@ namespace XtremeFPS.InputHandling
             }
         }
 #endif
+
+        private void Update()
+        {
+            isDashing = Input.GetKeyDown(KeyCode.Q); // Bind dash to the Q key
+        }
 
         #endregion
 

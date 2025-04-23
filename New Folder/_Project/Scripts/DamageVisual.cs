@@ -57,63 +57,38 @@ public class DamageVisual : MonoBehaviour
     }
 
     private void OnSpiderDeath()
-{
-    Debug.Log("Spider is dead.");
-
-    Vector3 lastPosition = transform.position;
-    Debug.Log("Spider position: " + lastPosition + " (S22)");
-
-    Quaternion lastRotation = transform.rotation;
-    Debug.Log("Spider rotation: " + lastRotation + " (S22-1)");
-
-    Vector3 lastVelocity = spiderRootRigidbody != null ? spiderRootRigidbody.velocity : Vector3.zero;
-    Debug.Log("Spider velocity: " + lastVelocity + " (S22-2)");
-
-    Vector3 lastAngularVelocity = spiderRootRigidbody != null ? spiderRootRigidbody.angularVelocity : Vector3.zero;
-    Debug.Log("Spider angular velocity: " + lastAngularVelocity + " (S22-3)");
-
-    Vector3 lastScale = transform.localScale;
-    Debug.Log("Spider scale: " + lastScale + " (S22-4)");
-
-    // Ensure the prefab is assigned
-    if (spiderRagdollPrefab != null)
     {
-        Debug.Log("Ragdoll prefab is assigned.");
+        Debug.Log("Spider is dead.");
 
-        // Instantiate the ragdoll first
-            Debug.Log("Spider position: " + lastPosition + " (S22)");
-        GameObject ragdollInstance = Instantiate(spiderRagdollPrefab, lastPosition, lastRotation);
-            Destroy(ragdollInstance, 15);
-            Debug.Log("Ragdoll spawned at position " + ragdollInstance.transform.position);
-        ragdollInstance.transform.position = gameObject.transform.position;
-        if (ragdollInstance != null)
+        Vector3 lastPosition = transform.position;
+        Quaternion lastRotation = transform.rotation;
+        Vector3 lastScale = transform.localScale;
+
+        // Ensure the prefab is assigned
+        if (spiderRagdollPrefab != null)
         {
+            GameObject ragdollInstance = Instantiate(spiderRagdollPrefab, lastPosition, lastRotation);
+            Destroy(ragdollInstance, 15);
             ragdollInstance.transform.localScale = lastScale;
-            Debug.Log("Ragdoll spawned at position " + ragdollInstance.transform.position);
-
-            Rigidbody ragdollRootRb = ragdollInstance.GetComponent<Rigidbody>();
-            if (ragdollRootRb != null)
-            {
-                // No velocity or angular velocity applied
-                Debug.Log("Ragdoll Rigidbody found, but no velocities applied.");
-            }
-            else
-            {
-                Debug.LogError("Ragdoll's Rigidbody is missing or not correctly assigned.");
-            }
         }
         else
         {
-            Debug.LogError("Failed to instantiate ragdoll prefab. Make sure the prefab is valid.");
+            Debug.LogError("Spider Ragdoll Prefab is not assigned. Please assign it in the inspector.");
         }
-    }
-    else
-    {
-        Debug.LogError("Spider Ragdoll Prefab is not assigned. Please assign it in the inspector.");
-    }
 
-    // Now destroy the spider after the ragdoll is spawned
-    Destroy(gameObject);
-}
+        // Apply upgrades for spider death
+        XPAndUpgradeSystem xpSystem = FindObjectOfType<XPAndUpgradeSystem>();
+        if (xpSystem != null)
+        {
+            Debug.Log("Applying upgrades for spider death.");
+            xpSystem.AddXPFromSpiderKill(10); // Example: Grant 50 XP for killing a spider
+        }
+        else
+        {
+            Debug.LogWarning("XPAndUpgradeSystem not found.");
+        }
 
+        // Destroy the spider after the ragdoll is spawned
+        Destroy(gameObject);
+    }
 }

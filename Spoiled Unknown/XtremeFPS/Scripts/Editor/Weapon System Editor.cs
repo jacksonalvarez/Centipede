@@ -55,6 +55,12 @@ namespace XtremeFPS.Editor
             uni_WeaponSystem.ShellPosition = (Transform)EditorGUILayout.ObjectField(new GUIContent("Shell Position", "Reference to the GameObject where shell will spawn."), uni_WeaponSystem.ShellPosition, typeof(Transform), true);
             uni_WeaponSystem.animator = (Animator)EditorGUILayout.ObjectField(new GUIContent("Animator", "Reference to the Animator where animations are stored/setted up."), uni_WeaponSystem.animator, typeof(Animator), true);
             uni_WeaponSystem.aimUIImage = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Scoped-In Image (Optional)", "(Optional) Reference to the UI gameObject that will be displayed when aiming."), uni_WeaponSystem.aimUIImage, typeof(GameObject), true);
+            uni_WeaponSystem.explosionEffectPrefab = (GameObject)EditorGUILayout.ObjectField(
+                new GUIContent("Explosion Effect", "Reference to the GameObject that will be spawned for explosion effects."),
+                uni_WeaponSystem.explosionEffectPrefab,
+                typeof(GameObject),
+                true
+            );
             EditorGUILayout.Space();
             #endregion
             

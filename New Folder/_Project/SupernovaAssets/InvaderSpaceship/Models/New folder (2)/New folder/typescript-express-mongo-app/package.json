@@ -1,0 +1,27 @@
+{
+  "name": "typescript-express-mongo-app",
+  "version": "1.0.0",
+  "description": "A TypeScript project with an Express server connected to MongoDB Atlas.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.10.9",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.1.2",
+    "ts-node": "^9.1.1",
+    "@types/node": "^14.14.6",
+    "@types/express": "^4.17.8"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "license": "MIT"
+}

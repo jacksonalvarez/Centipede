@@ -72,5 +72,23 @@ namespace XtremeFPS.WeaponSystem.Pickup
             }
             Debug.Log($"Spawned weapon at spawn point two: {selectedWeapons[randomWeaponIndexTwo].name}");
         }
+
+        private void Update()
+        {
+            // Ensure weapons stay at their respective spawn points and update their local position/rotation
+            if (spawnPointOne != null)
+            {
+                Transform weaponOne = spawnPointOne.GetChild(0);
+                weaponOne.localPosition = Vector3.zero; // Reset local position to match the parent
+                weaponOne.localRotation = Quaternion.identity; // Reset local rotation to match the parent
+            }
+
+            if (spawnPointTwo != null)
+            {
+                Transform weaponTwo = spawnPointTwo.GetChild(0);
+                weaponTwo.localPosition = Vector3.zero; // Reset local position to match the parent
+                weaponTwo.localRotation = Quaternion.identity; // Reset local rotation to match the parent
+            }
+        }
     }
 }

@@ -30,7 +30,6 @@ void Start()
     RaycastHit hitInfo;
 if (Physics.Raycast(bossAI.startPosition, Vector3.down, out hitInfo, 1000, terrainLayer.value))
     {
-        Debug.Log($"Raycast hit at: {hitInfo.point}, Object: {hitInfo.transform.name}");
         Debug.DrawRay(bossAI.startPosition, Vector3.down * 1000, Color.red, 5f); // Draw the ray in the editor
         enterParticle = hitInfo.transform.CompareTag("Terrain") ? dirtEffect : waterEffect;
     }
@@ -39,7 +38,6 @@ if (Physics.Raycast(bossAI.startPosition, Vector3.down, out hitInfo, 1000, terra
     // Debugging end position raycast
     if (Physics.Raycast(bossAI.endPosition, Vector3.down, out hitInfo, 1000, terrainLayer.value))
     {
-        Debug.Log($"Raycast hit at: {hitInfo.point}, Object: {hitInfo.transform.name}");
         Debug.DrawRay(bossAI.endPosition, Vector3.down * 1000, Color.blue, 5f); // Draw the ray in the editor
         exitParticle = hitInfo.transform.CompareTag("Terrain") ? dirtEffect : waterEffect;
     }

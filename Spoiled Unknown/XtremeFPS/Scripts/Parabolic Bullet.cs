@@ -16,14 +16,19 @@ namespace XtremeFPS.WeaponSystem
         private Vector3 startPosition;
         private Vector3 startForward;
         private GameObject particlesPrefab;
+        private GameObject explosionEffectPrefab; // Added for War Machine++
         private float bulletLifetime;
-
         private float startTime = -1;
         private Vector3 currentPoint;
+        private float bulletDeathTime;
+
+        // Pre-allocated vectors to reduce GC pressure
+        private Vector3 tempPoint;
+        private Vector3 gravityVec;
         #endregion
 
         #region Initialization
-        public void Initialize(Transform startPoint, float speed, float damage, float gravity, float bulletLifetime, GameObject particlePrefab)
+        public void Initialize(Transform startPoint, float speed, float damage, float gravity, float bulletLifetime, GameObject particlePrefab, GameObject explosionEffectPrefab)
         {
             this.startPosition = startPoint.position;
             this.startForward = startPoint.forward.normalized;
@@ -31,6 +36,7 @@ namespace XtremeFPS.WeaponSystem
             this.damage = damage;
             this.gravity = gravity;
             this.particlesPrefab = particlePrefab;
+            this.explosionEffectPrefab = explosionEffectPrefab; // Added for War Machine++
             this.bulletLifetime = bulletLifetime;
         }
         #endregion
@@ -38,8 +44,8 @@ namespace XtremeFPS.WeaponSystem
         #region MonoBehaviour Callbacks
         void OnEnable()
         {
-            StartCoroutine(DestroyBullets());
             startTime = -1f;
+            bulletDeathTime = Time.time + bulletLifetime;
         }
 
         private void FixedUpdate()
@@ -56,11 +62,11 @@ namespace XtremeFPS.WeaponSystem
             if (prevTime > 0)
             {
                 Vector3 prevPoint = FindPointOnParabola(prevTime);
-                if (CastRayBetweenPoints(prevPoint, currentPoint, out hit)) OnHit(hit);
+                if (CastRayBetweenPoints(prevPoint, currentPoint, out hit)) OnHit(hit, currentPoint - prevPoint);
             }
 
             Vector3 nextPoint = FindPointOnParabola(nextTime);
-            if (CastRayBetweenPoints(currentPoint, nextPoint, out hit)) OnHit(hit);
+            if (CastRayBetweenPoints(currentPoint, nextPoint, out hit)) OnHit(hit, nextPoint - currentPoint);
         }
 
         private void Update()
@@ -70,15 +76,22 @@ namespace XtremeFPS.WeaponSystem
             float currentTime = Time.time - startTime;
             currentPoint = FindPointOnParabola(currentTime);
             transform.position = currentPoint;
+
+            // Check for bullet lifetime expiration
+            if (Time.time >= bulletDeathTime)
+            {
+                OnBulletDestroy();
+            }
         }
         #endregion
 
         #region Private Methods
         private Vector3 FindPointOnParabola(float time)
         {
-            Vector3 point = startPosition + (speed * time * startForward);
-            Vector3 gravityVec = gravity * time * time * Vector3.down;
-            return point + gravityVec;
+            tempPoint = startPosition + (speed * time * startForward);
+            gravityVec = gravity * time * time * Vector3.down;
+            tempPoint += gravityVec;
+            return tempPoint;
         }
 
         private bool CastRayBetweenPoints(Vector3 startPoint, Vector3 endPoint, out RaycastHit hit)
@@ -86,56 +99,81 @@ namespace XtremeFPS.WeaponSystem
             return Physics.Raycast(startPoint, endPoint - startPoint, out hit, (endPoint - startPoint).magnitude);
         }
 
-        private void OnHit(RaycastHit hit)
+        private void OnHit(RaycastHit hit, Vector3 bulletDirection)
         {
-            int finalDamage = Mathf.FloorToInt(damage); // Base damage
+            Debug.Log($"Bullet hit: {hit.transform.name} with tag: {hit.transform.tag}");
 
-            // **Check for Enemy Type A**
-            if (hit.transform.CompareTag("Enemy") && hit.transform.TryGetComponent(out Damageable damageableA))
+            XPAndUpgradeSystem xpSystem = FindObjectOfType<XPAndUpgradeSystem>();
+            bool isWarMachineActive = xpSystem != null && xpSystem.IsUpgradeActive("War Machine: Armour piercing bullets. Increase Damage by 10%");
+            bool isWarMachinePlusActive = xpSystem != null && xpSystem.IsUpgradeActive("War Machine++: After 15 seconds of not being hit, bullets begin to explode, Dealing double damage.");
+
+            int finalDamage = Mathf.FloorToInt(damage);
+            if (isWarMachineActive)
             {
-                damageableA.ApplyDamage(new Damageable.DamageMessage()
+                finalDamage = Mathf.FloorToInt(finalDamage * 1.1f); // Increase damage by 10%
+                Debug.Log("War Machine active: Damage increased by 10%.");
+            }
+
+            if (isWarMachinePlusActive)
+            {
+                finalDamage *= 2; // Double damage for War Machine++
+                Debug.Log("War Machine++ active: Damage doubled.");
+            }
+
+            // Replace impact effect with explosion effect for War Machine++
+            GameObject impactEffect = isWarMachinePlusActive ? explosionEffectPrefab : particlesPrefab;
+
+            Debug.Log($"Impact Effect Prefab: {impactEffect.name}");
+
+            if (impactEffect != null)
+            {
+                Instantiate(impactEffect, hit.point, Quaternion.LookRotation(-bulletDirection));
+            }
+
+            if (hit.transform.CompareTag("Spider-Enemy") && hit.transform.TryGetComponent(out Damageable spiderDamageable))
+            {
+                Debug.Log("Hit Spider-Enemy.");
+                spiderDamageable.ApplyDamage(new Damageable.DamageMessage()
                 {
-                    amount = finalDamage,  // Full damage
+                    amount = finalDamage,
                     damageSource = transform.position
                 });
 
-                Debug.Log($"Bullet hit Enemy A: {hit.transform.name}, Damage: {finalDamage}");
-            }
-            // **Check for Spider-Enemy (takes half damage and apply force)**
-            else if (hit.transform.CompareTag("Spider-Enemy") && hit.transform.TryGetComponent(out Damageable damageableB))
-            {
-                int reducedDamage = Mathf.FloorToInt(finalDamage);  // Half damage
-                damageableB.ApplyDamage(new Damageable.DamageMessage()
+                // Heal the player with a chance based on the damage dealt
+                spiderDamageable.HealPlayerWithChance(finalDamage);
+
+                // Grant XP for hitting a spider
+                if (xpSystem != null)
                 {
-                    amount = reducedDamage,
+                    xpSystem.AddXPFromSpiderKill(5); // Example: Grant 5 XP for hitting a spider
+                }
+
+                Rigidbody spiderRigidbody = hit.transform.GetComponent<Rigidbody>();
+                if (spiderRigidbody != null)
+                {
+                    Vector3 forceDirection = (hit.transform.position - transform.position).normalized + Vector3.up * 0.2f;
+                    spiderRigidbody.AddForce(forceDirection * 2f, ForceMode.Impulse);
+                }
+            }
+            else if (hit.transform.CompareTag("Enemy") && hit.transform.TryGetComponent(out Damageable bossDamageable))
+            {
+                Debug.Log("Hit Boss.");
+                bossDamageable.ApplyDamage(new Damageable.DamageMessage()
+                {
+                    amount = finalDamage,
                     damageSource = transform.position
                 });
 
-                // Apply force to Spider-Enemy if it has a Rigidbody
-Rigidbody spiderRigidbody = hit.transform.GetComponent<Rigidbody>();
-if (spiderRigidbody != null)
-{
-    // Calculate impact direction (mostly forward with a slight upward lift)
-    Vector3 forceDirection = (hit.transform.position - transform.position).normalized;
-    forceDirection += Vector3.up * 0.2f; // Adds a slight lift effect
+                // Heal the player with a chance based on the damage dealt
+                bossDamageable.HealPlayerWithChance(finalDamage);
 
-    // Apply a more realistic bullet force
-    spiderRigidbody.AddForce(forceDirection * 2f, ForceMode.Impulse); // Reduced from 10f to 2f
-}
-
-                Debug.Log($"Bullet hit Spider-Enemy: {hit.transform.name}, Damage: {reducedDamage}");
+                // Grant XP for hitting the boss
+                if (xpSystem != null)
+                {
+                    xpSystem.AddXPFromBossHit();
+                }
             }
 
-            // **Spawn impact particles**
-            GameObject hitEffect = PoolManager.Instance.SpawnObject(particlesPrefab, hit.point + hit.normal * 0.05f, Quaternion.LookRotation(hit.normal));
-            hitEffect.transform.parent = hit.transform;
-
-            OnBulletDestroy();
-        }
-
-        private IEnumerator DestroyBullets()
-        {
-            yield return new WaitForSeconds(bulletLifetime);
             OnBulletDestroy();
         }
 

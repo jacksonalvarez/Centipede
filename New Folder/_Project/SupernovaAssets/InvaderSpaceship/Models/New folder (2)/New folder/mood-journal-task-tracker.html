@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Journal & Task Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.3.0/luxon.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <header>
+        <h1>Mood Journal & Task Tracker</h1>
+        <nav>
+            <button class="nav-button active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-button" onclick="showSection('journal')">Journal</button>
+            <button class="nav-button" onclick="showSection('mood')">Mood</button>
+            <button class="nav-button" onclick="showSection('tasks')">Tasks</button>
+            <button class="nav-button" onclick="showSection('calendar')">Calendar</button>
+            <button class="nav-button" onclick="showSection('projects')">Projects</button>
+            <button class="nav-button" onclick="showSection('goals')">Goals</button>
+            <button class="nav-button" onclick="showSection('settings')">Settings</button>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="dashboard" class="active">
+            <h2>Dashboard</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Journal Entries</h3>
+                    <div class="stat-value" id="journal-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Current Mood</h3>
+                    <div class="stat-value" id="current-mood">😐</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Tasks Completed</h3>
+                    <div class="stat-value" id="tasks-completed">0/0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Projects</h3>
+                    <div class="stat-value" id="active-projects">0</div>
+                </div>
+            </div>
+            
+            <div class="grid-container">
+                <div class="card">
+                    <h3>Mood Overview</h3>
+                    <p>Your mood has been generally neutral this week.</p>
+                    <div class="mood-chart-container">
+                        <p>Mood visualization will appear here</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Upcoming Tasks</h3>
+                    <ul class="task-list" id="upcoming-tasks">
+                        <li class="task-item">No tasks scheduled</li>
+                    </ul>
+                    <button onclick="showSection('tasks')" class="btn">Manage Tasks</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Recent Journal Entries</h3>
+                    <div id="recent-journals">
+                        <p>No recent entries</p>
+                    </div>
+                    <button onclick="showSection('journal')" class="btn">Write Entry</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Calendar Overview</h3>
+                    <p>Upcoming events for the next 7 days</p>
+                    <div id="mini-calendar">
+                        <p>Calendar preview will appear here</p>
+                    </div>
+                    <button onclick="showSection('calendar')" class="btn">View Calendar</button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="journal">
+            <h2>Journal Entries</h2>
+            <button onclick="openNewJournalModal()" class="btn">New Entry</button>
+            
+            <div id="journal-entries" class="journal-entries">
+                <p>Your journal entries will appear here</p>
+            </div>
+        </section>
+        
+        <section id="mood">
+            <h2>Mood Tracker</h2>
+            
+            <div class="card">
+                <h3>How are you feeling today?</h3>
+                <div class="mood-options">
+                    <div class="mood-option" onclick="selectMood('😄', 5)">
+                        <div class="mood-emoji">😄</div>
+                        <div>Great</div>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('🙂', 4)">
+                        <div class="mood-emoji">🙂</div>
+                        <div>Good</div>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('😐', 3)">
+                        <div class="mood-emoji">😐</div>
+                        <div>Neutral</div>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('🙁', 2)">
+                        <div class="mood-emoji">🙁</div>
+                        <div>Bad</div>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('😞', 1)">
+                        <div class="mood-emoji">😞</div>
+                        <div>Awful</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>Factors (optional)</h3>
+                    <input type="text" id="mood-factors" placeholder="What's affecting your mood today? (e.g., sleep, stress, exercise)">
+                </div>
+                
+                <div>
+                    <h3>Notes (optional)</h3>
+                    <textarea id="mood-notes" rows="4" placeholder="Additional notes about your mood"></textarea>
+                </div>
+                
+                <button onclick="saveMood()" class="btn">Save Mood</button>
+            </div>
+            
+            <div class="card">
+                <h3>Mood History</h3>
+                <div id="mood-history">
+                    <p>Your mood history will appear here</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="tasks">
+            <h2>Tasks & To-Dos</h2>
+            
+            <div class="card">
+                <h3>Add New Task</h3>
+                <input type="text" id="new-task" placeholder="Task description">
+                <input type="date" id="task-due-date">
+                <select id="task-priority">
+                    <option value="low">Low Priority</option>
+                    <option value="medium" selected>Medium Priority</option>
+                    <option value="high">High Priority</option>
+                </select>
+                <select id="task-project">
+                    <option value="">No Project</option>
+                </select>
+                <button onclick="addTask()" class="btn">Add Task</button>
+            </div>
+            
+            <div class="card">
+                <h3>My Tasks</h3>
+                <select id="task-filter" onchange="filterTasks()">
+                    <option value="all">All Tasks</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+                
+                <ul class="task-list" id="task-list">
+                    <li class="task-item">No tasks available</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="calendar">
+            <h2>Calendar</h2>
+            
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <button onclick="prevMonth()" class="btn">&lt; Prev</button>
+                    <span id="current-month" style="font-size: 1.2rem; font-weight: bold;">April 2025</span>
+                    <button onclick="nextMonth()" class="btn">Next &gt;</button>
+                </div>
+                
+                <table class="calendar" id="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Sun</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body">
+                        <!-- Calendar will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h3>Add Event</h3>
+                <input type="text" id="event-title" placeholder="Event title">
+                <input type="date" id="event-date">
+                <input type="time" id="event-time">
+                <textarea id="event-description" rows="3" placeholder="Event description"></textarea>
+                <button onclick="addEvent()" class="btn">Add Event</button>
+            </div>
+            
+            <div class="card">
+                <h3>Events</h3>
+                <div id="events-list">
+                    <p>Select a date to see events</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="projects">
+            <h2>Project Management</h2>
+            
+            <div class="card">
+                <h3>Add New Project</h3>
+                <input type="text" id="project-name" placeholder="Project name">
+                <textarea id="project-description" rows="3" placeholder="Project description"></textarea>
+                <input type="date" id="project-deadline" placeholder="Deadline">
+                <button onclick="addProject()" class="btn">Create Project</button>
+            </div>
+            
+            <h3>My Projects</h3>
+            <div id="projects-list" class="grid-container">
+                <p>Your projects will appear here</p>
+            </div>
+            
+            <h3>Project Board</h3>
+            <div class="kanban-board">
+                <div class="kanban-column">
+                    <h3>To Do</h3>
+                    <div id="kanban-todo" class="kanban-items">
+                        <!-- Tasks will appear here -->
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <h3>In Progress</h3>
+                    <div id="kanban-progress" class="kanban-items">
+                        <!-- Tasks will appear here -->
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <h3>Review</h3>
+                    <div id="kanban-review" class="kanban-items">
+                        <!-- Tasks will appear here -->
+                    </div>
+                </div>
+                
+                <div class="kanban-column">
+                    <h3>Completed</h3>
+                    <div id="kanban-done" class="kanban-items">
+                        <!-- Tasks will appear here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="goals">
+            <h2>Goals Tracker</h2>
+            
+            <div class="card">
+                <h3>Add New Goal</h3>
+                <input type="text" id="goal-title" placeholder="Goal title">
+                <select id="goal-timeframe">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+                <textarea id="goal-description" rows="3" placeholder="Goal description"></textarea>
+                <div>
+                    <label>
+                        <input type="checkbox" id="goal-measurable"> Make measurable
+                    </label>
+                </div>
+                <div id="goal-measure-container" style="display: none;">
+                    <input type="number" id="goal-target" placeholder="Target value">
+                    <input type="text" id="goal-unit" placeholder="Unit (e.g., times, hours)">
+                </div>
+                <button onclick="addGoal()" class="btn">Add Goal</button>
+            </div>
+            
+            <div class="card">
+                <h3>My Goals</h3>
+                <select id="goals-filter" onchange="filterGoals()">
+                    <option value="all">All Goals</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                </select>
+                
+                <div id="goals-list" class="grid-container">
+                    <p>Your goals will appear here</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="settings">
+            <h2>Settings</h2>
+            
+            <div class="card">
+                <h3>User Profile</h3>
+                <input type="text" id="user-name" placeholder="Your name">
+                <input type="email" id="user-email" placeholder="Your email">
+                <button onclick="saveUserProfile()" class="btn">Save Profile</button>
+            </div>
+            
+            <div class="card">
+                <h3>Data Storage</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;">
+                        <input type="radio" name="storage" value="local" checked> Browser Storage (Default)
+                    </label>
+                    <label style="display: block;">
+                        <input type="radio" name="storage" value="azure"> Azure Storage
+                    </label>
+                </div>
+                <div id="azure-config" style="display: none;">
+                    <input type="text" id="azure-connection-string" placeholder="Azure Connection String">
+                    <input type="text" id="azure-container" placeholder="Container Name">
+                </div>
+                
+                <h3>Database Configuration</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block;">
+                        <input type="radio" name="database" value="sqlite" checked> SQLite
+                    </label>
+                </div>
+                <div id="sqlite-config">
+                    <input type="text" id="sqlite-filename" placeholder="Database Filename" value="moodtracker.db">
+                </div>
+                
+                <button onclick="saveStorageSettings()" class="btn">Save Storage Settings</button>
+            </div>
+            
+            <div class="card">
+                <h3>Import/Export Data</h3>
+                <button onclick="exportData()" class="btn">Export All Data</button>
+                <div style="margin: 1rem 0;">
+                    <input type="file" id="import-file" accept=".json">
+                </div>
+                <button onclick="importData()" class="btn">Import Data</button>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Modal for new journal entry -->
+    <div id="journal-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('journal-modal')">&times;</span>
+            <h2>New Journal Entry</h2>
+            
+            <input type="text" id="journal-title" placeholder="Title">
+            <textarea id="journal-content" rows="8" placeholder="What's on your mind today?"></textarea>
+            
+            <div>
+                <h3>Add Mood (optional)</h3>
+                <div class="mood-options">
+                    <div class="mood-option" onclick="selectJournalMood('😄')">
+                        <div class="mood-emoji">😄</div>
+                        <div>Great</div>
+                    </div>
+                    <div class="mood-option" onclick="selectJournalMood('🙂')">
+                        <div class="mood-emoji">🙂</div>
+                        <div>Good</div>
+                    </div>
+                    <div class="mood-option" onclick="selectJournalMood('😐')">
+                        <div class="mood-emoji">😐</div>
+                        <div>Neutral</div>
+                    </div>
+                    <div class="mood-option" onclick="selectJournalMood('🙁')">
+                        <div class="mood-emoji">🙁</div>
+                        <div>Bad</div>
+                    </div>
+                    <div class="mood-option" onclick="selectJournalMood('😞')">
+                        <div class="mood-emoji">😞</div>
+                        <div>Awful</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3>Tags (optional)</h3>
+                <input type="text" id="journal-tags" placeholder="Add tags separated by commas">
+            </div>
+            
+            <button onclick="saveJournal()" class="btn">Save Entry</button>
+        </div>
+    </div>
+    XH7QZ7rIeTExrll2
+    <!-- Modal for task details -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('task-modal')">&times;</span>
+            <h2>Task Details</h2>
+            <input type="text" id="edit-task-title" placeholder="Task title">
+            <textarea id="edit-task-description" rows="3" placeholder="Task description"></textarea>
+            <input type="date" id="edit-task-due-date">
+            <select id="edit-task-priority">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
+            <select id="edit-task-project">
+                <option value="">No Project</option>
+            </select>
+            <select id="edit-task-status">
+                <option value="todo">To Do</option>
+                <option value="progress">In Progress</option>
+                <option value="review">Review</option>
+                <option value="done">Completed</option>
+            </select>
+    
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button onclick="updateTask()" class="update-btn">Update Task</button>
+                <button onclick="closeModal('task-modal')" class="cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('main > section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show the selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Update active navigation button
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.nav-button[onclick="showSection('${sectionId}')"]`).classList.add('active');
+        }
+
+        async function connectToDatabase() {
+            const { MongoClient } = require("mongodb");
+            // Load environment variables from .env file (optional but recommended for development)
+            // Make sure to install dotenv: npm install dotenv
+            require('dotenv').config();
+
+            // --- Get the Atlas connection string from environment variables ---
+            // It's best practice to store the entire connection URI in one environment variable.
+            const url = process.env.MONGODB_URI;
+
+            // --- Validate that the environment variable is set ---
+            if (!url) {
+                console.error("Error: MongoDB connection string is missing.");
+                console.error("Please set the MONGODB_URI environment variable (e.g., in a .env file).");
+                process.exit(1); // Exit the application if configuration is missing
+            }
+
+            // --- Create a new MongoClient instance ---
+            // The driver handles connection pooling automatically.
+            // You can pass options here if needed, but defaults are generally good.
+            const client = new MongoClient(url);
+
+            // --- Asynchronous function to connect and manage the application logic ---
+            async function run() {
+                try {
+                    // Connect the client to the server (optional starting in v4.7)
+                    // await client.connect(); // No longer strictly necessary to call connect() first
+
+                    // --- Establish connection and verify ---
+                    // Sending a ping command is a good way to verify connection.
+                    // It implicitly connects if not already connected.
+                    // Specify the database name from env or use a default like 'admin' for ping
+                    const dbName = process.env.DB_NAME || "admin";
+                    await client.db(dbName).command({ ping: 1 });
+                    console.log("Successfully connected to MongoDB Atlas!");
+                    console.log(`Using database: ${process.env.DB_NAME || "(default based on connection string or admin for ping)"}`);
+
+                    // --- Application Logic Here ---
+                    // You can now use the 'client' object to interact with your database.
+                    // Example: Access a specific database and collection
+                    // const database = client.db(process.env.DB_NAME || "your_default_db");
+                    // const collection = database.collection("your_collection_name");
+
+                    // Perform operations...
+                    // const docCount = await collection.countDocuments();
+                    // console.log(`Found ${docCount} documents in the collection.`);
+
+                    // Keep the application running or perform tasks...
+                    console.log("Connection established. Ready for database operations.");
+                    // In a real server application, you would typically keep the connection
+                    // open and handle requests here, closing only on shutdown.
+
+                } catch (err) {
+                    // --- Error Handling ---
+                    console.error("Failed to connect to MongoDB or perform operation:", err.stack);
+                    process.exit(1); // Exit if connection fails on startup
+                } finally {
+                    // --- Connection Closing ---
+                    // IMPORTANT: In a long-running application (like a web server),
+                    // you usually close the connection only when the application is shutting down.
+                    // For a simple script like this that performs a task and exits, closing here is okay.
+                    console.log("Closing MongoDB connection...");
+                    await client.close();
+                    console.log("MongoDB connection closed.");
+                }
+            }
+
+            // --- Execute the main function and catch any top-level errors ---
+            run().catch(err => {
+                console.error("An unexpected error occurred:", err);
+                // Attempt to close the client if it exists and might be connected
+                if (client && typeof client.close === 'function') {
+                    client.close().catch(closeErr => console.error("Error closing client during cleanup:", closeErr));
+                }
+                process.exit(1);
+            });
+        }
+
+        // Call this function when the app initializes
+        connectToDatabase();
+    </script>
+</body>
+</html>

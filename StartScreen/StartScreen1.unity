@@ -332,6 +332,7 @@ GameObject:
   m_Component:
   - component: {fileID: 120694124}
   - component: {fileID: 120694123}
+  - component: {fileID: 120694125}
   m_Layer: 0
   m_Name: Video Player
   m_TagString: Untagged
@@ -390,6 +391,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &120694125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 120694122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd9438343fdb40f4fa27a6cbcbed2592, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioSource: {fileID: 0}
+  doucopy: {fileID: 0}
+  yesICopy: {fileID: 0}
+  samples: {fileID: 0}
+  understoodCommander: {fileID: 0}
+  clickOne: {fileID: 0}
+  clickTwo: {fileID: 0}
+  clickThree: {fileID: 0}
+  spaceHum: {fileID: 0}
+  bassHit: {fileID: 0}
+  takeoff: {fileID: 0}
 --- !u!1 &684969147
 GameObject:
   m_ObjectHideFlags: 0
@@ -652,6 +676,7 @@ GameObject:
   - component: {fileID: 1370864799}
   - component: {fileID: 1370864798}
   - component: {fileID: 1370864800}
+  - component: {fileID: 1370864801}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -709,6 +734,18 @@ MonoBehaviour:
   m_InputActionsPerSecond: 10
   m_RepeatDelay: 0.5
   m_ForceModuleActive: 0
+--- !u!114 &1370864801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1370864796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4fea087cdb73454fbd5cb72d6acfd16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1604242768
 GameObject:
   m_ObjectHideFlags: 0
@@ -793,7 +830,6 @@ GameObject:
   - component: {fileID: 1706732709}
   - component: {fileID: 1706732708}
   - component: {fileID: 1706732707}
-  - component: {fileID: 1706732706}
   m_Layer: 5
   m_Name: Options
   m_TagString: Untagged
@@ -820,18 +856,6 @@ RectTransform:
   m_AnchoredPosition: {x: 643, y: 9}
   m_SizeDelta: {x: 640, y: 360}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1706732706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1706732704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0ac721b979b570478f35e6730f44020, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1706732707
 MonoBehaviour:
   m_ObjectHideFlags: 0

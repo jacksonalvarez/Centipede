@@ -26,7 +26,7 @@ namespace XtremeFPS.WeaponSystem
         private FPSInputManager inputManager;
 
         //Bullet Physics
-        public float bulletSpeed;
+        public float bulletSpeed; // Speed of the bullet
         public float bulletDamage;
         public float bulletLifeTime;
         public float bulletGravitationalForce;
@@ -35,13 +35,14 @@ namespace XtremeFPS.WeaponSystem
         public Transform ShellPosition;
         public GameObject Shell;
         public GameObject particlesPrefab;
+        public GameObject explosionEffectPrefab; // Add this field to assign the explosion effect prefab
 
         //Gun stats
         public int BulletsLeft { get; private set; }
         public bool isGunAuto;
         public bool isAimHold;
         public float timeBetweenEachShots;
-        public float timeBetweenShooting;
+        public float timeBetweenShooting; // Time between each shot
         public int magazineSize;
         public int totalBullets;
         public int bulletsPerTap;
@@ -198,11 +199,47 @@ namespace XtremeFPS.WeaponSystem
         {
             readyToShoot = false;
 
-            GameObject bulletObject = PoolManager.Instance.SpawnObject(bulletPrefab, shootPoint.position, Quaternion.identity);
-            ParabolicBullet parabolicBullet = bulletObject.GetComponent<ParabolicBullet>();
-            parabolicBullet.Initialize(shootPoint, bulletSpeed, bulletDamage, bulletGravitationalForce, bulletLifeTime, particlesPrefab);
+            // Check if "War Machine" or "War Machine++" upgrades are active
+            XPAndUpgradeSystem xpSystem = FindObjectOfType<XPAndUpgradeSystem>();
+            bool isWarMachineActive = xpSystem != null && xpSystem.IsUpgradeActive("War Machine: Armour piercing bullets.");
+            bool isWarMachinePlusActive = xpSystem != null && xpSystem.IsWarMachinePlusActive();
 
-            //Graphics
+            float finalBulletDamage = bulletDamage;
+            GameObject selectedEffectPrefab = particlesPrefab; // Default effect
+
+            if (isWarMachineActive)
+            {
+                finalBulletDamage *= 1.1f; // Increase damage by 10%
+                Debug.Log("War Machine active: Bullet damage increased by 10%.");
+            }
+
+            if (isWarMachinePlusActive)
+            {
+                finalBulletDamage *= 2f; // Double damage for War Machine++
+                selectedEffectPrefab = explosionEffectPrefab; // Use explosion effect
+                Debug.Log("War Machine++ active: Bullet damage doubled and explosion effect applied.");
+            }
+
+            // Ensure the bullet prefab is instantiated correctly
+            GameObject bulletObject = PoolManager.Instance.SpawnObject(bulletPrefab, shootPoint.position, Quaternion.identity);
+            if (bulletObject == null)
+            {
+                Debug.LogError("Failed to spawn bullet object. Ensure the bulletPrefab is assigned and valid.");
+                return;
+            }
+
+            ParabolicBullet parabolicBullet = bulletObject.GetComponent<ParabolicBullet>();
+            if (parabolicBullet != null)
+            {
+                // Pass the calculated damage and selected effect to the bullet
+                parabolicBullet.Initialize(shootPoint, bulletSpeed, finalBulletDamage, bulletGravitationalForce, bulletLifeTime, selectedEffectPrefab, explosionEffectPrefab);
+            }
+            else
+            {
+                Debug.LogError("ParabolicBullet component not found on the bullet prefab.");
+            }
+
+            // Graphics
             muzzleFlash.Play();
 
             PoolManager.Instance.SpawnObject(Shell, ShellPosition.position, ShellPosition.rotation);

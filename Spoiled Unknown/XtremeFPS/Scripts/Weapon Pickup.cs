@@ -15,7 +15,7 @@ namespace XtremeFPS.WeaponSystem.Pickup
         public Transform gunDropPosition;
 
         public CharacterController playerArmature;
-        public Transform weaponHolder;       // Player’s gun position (hand)
+        public Transform weaponHolder;       // Player's gun position (hand)
         public Transform cameraRoot;
         public TextMeshProUGUI bulletText;
 
@@ -26,32 +26,44 @@ namespace XtremeFPS.WeaponSystem.Pickup
         public float dropTorqueMultiplier;
 
         // Variables for floating effect (active only when not yet picked up)
-        private Vector3 initialPosition;
         public float floatAmplitude = 0.5f;
         public float floatFrequency = 1f;
+        
+        // New variables to handle floating without drift
+        private Vector3 baseLocalPosition;
+        private float startTime;
 
         private UniversalWeaponSystem weaponSystem;
         private BoxCollider Collider;
         private Rigidbody rb;
+        private bool isPickedUp = false;
 
         private void Start()
         {
             Collider = GetComponent<BoxCollider>();
             weaponSystem = GetComponent<UniversalWeaponSystem>();
+            
+            // Record the time we started for consistent sin wave calculation
+            startTime = Time.time;
 
-            // When the weapon hasn't been picked up, position it at its drop location and enable floating.
-            if (!hasBeenPickedUp)
+            // Ensure the weapon is not marked as picked up when spawned
+            isPickedUp = false;
+
+            // When the weapon hasn't been picked up, position it at its drop location
+            if (!hasBeenPickedUp && gunDropPosition != null)
             {
                 transform.SetParent(gunDropPosition);
-                transform.position = gunDropPosition.position;
-                transform.rotation = gunDropPosition.rotation;
-                initialPosition = transform.position; // Save the starting position for floating effect
+                transform.localPosition = Vector3.zero;
+                transform.localRotation = Quaternion.identity;
+                
+                // Store the base position - NEVER update this again
+                baseLocalPosition = transform.localPosition;
 
                 if (!TryGetComponent<Rigidbody>(out rb))
                 {
                     rb = gameObject.AddComponent<Rigidbody>();
                 }
-                rb.isKinematic = false;  // Keep kinematic while floating.
+                rb.isKinematic = true;
             }
             else
             {
@@ -71,17 +83,25 @@ namespace XtremeFPS.WeaponSystem.Pickup
 
         private void Update()
         {
-            // Apply floating effect only if the weapon hasn't been picked up yet.
-            if (!hasBeenPickedUp && !IsWeaponEquipped)
+            // Apply floating effect only if the weapon hasn't been picked up yet
+            if (!hasBeenPickedUp && !IsWeaponEquipped && gunDropPosition != null && !isPickedUp)
             {
-                float newY = initialPosition.y + Mathf.Sin(Time.time * floatFrequency) * floatAmplitude;
-                transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+                // Use a time-based approach that won't drift
+                float timeSinceStart = Time.time - startTime;
+                float yOffset = Mathf.Sin(timeSinceStart * floatFrequency) * floatAmplitude;
+                
+                // Always start from the original base position
+                transform.localPosition = new Vector3(
+                    baseLocalPosition.x,
+                    baseLocalPosition.y + yOffset/3,
+                    baseLocalPosition.z
+                );
+                
                 if (rb == null)
                 {
-                  rb = gameObject.AddComponent<Rigidbody>();
+                    rb = gameObject.AddComponent<Rigidbody>();
                 }
                 rb.isKinematic = true;
-
             }
         }
 
@@ -100,13 +120,17 @@ namespace XtremeFPS.WeaponSystem.Pickup
             // Set collider to not trigger when dropped
             Collider.isTrigger = false;  
             IsWeaponEquipped = false;
+            isPickedUp = false;
         }
 
         private void Equip()
         {
             // Mark that the weapon has been picked up at least once.
-            Destroy(rb);
+            if (rb != null)
+                Destroy(rb);
+            
             hasBeenPickedUp = true;
+            isPickedUp = true; // Mark as picked up only when equipped
             weaponSystem.enabled = true;
 
             // Set collider to trigger when equipped to prevent collisions with player
@@ -120,6 +144,7 @@ namespace XtremeFPS.WeaponSystem.Pickup
             {
                 hasBeenPickedUp = true;
             }
+            isPickedUp = true; // Mark as picked up when explicitly picked up
             Equip();
             transform.SetParent(weaponHolder);
             transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(Vector3.zero));
@@ -128,16 +153,21 @@ namespace XtremeFPS.WeaponSystem.Pickup
         public void Drop()
         {
             UnEquip();
-            bulletText.SetText("00 / 00");
+            if (bulletText != null)
+                bulletText.SetText("00 / 00");
+                
             transform.SetParent(null);
 
             // When dropped, enable physics and apply forces.
-            rb.velocity = playerArmature.velocity;
-            rb.AddForce(cameraRoot.forward * dropForwardForce, ForceMode.Impulse);
-            rb.AddForce(cameraRoot.up * dropUpwardForce, ForceMode.Impulse);
+            if (rb != null && playerArmature != null && cameraRoot != null)
+            {
+                rb.velocity = playerArmature.velocity;
+                rb.AddForce(cameraRoot.forward * dropForwardForce, ForceMode.Impulse);
+                rb.AddForce(cameraRoot.up * dropUpwardForce, ForceMode.Impulse);
 
-            float random = Random.Range(-1f, 1f);
-            rb.AddTorque(new Vector3(random, random, random) * dropTorqueMultiplier);
+                float random = Random.Range(-1f, 1f);
+                rb.AddTorque(new Vector3(random, random, random) * dropTorqueMultiplier);
+            }
         }
 
         public bool IsEquiped()

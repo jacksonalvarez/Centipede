@@ -50,6 +50,15 @@ namespace XtremeFPS.FPSController
         private readonly float sprintCooldownReset;
         private float sprintRemaining;
 
+        //dashing
+        public bool canDash; // Whether the player can dash
+        public float dashDistance = 10f; // Distance covered by the dash
+        public float dashCooldown = 2f; // Cooldown time for the dash
+        public float dashSpeedMultiplier = 3f; // Multiplier for dash speed
+        public float dashDuration = 0.3f; // Duration of the dash
+        public float invulnerabilityDuration = 0.5f; // Duration of invulnerability during dash
+        private bool isDashing = false; // Whether the player is currently dashing
+        private float lastDashTime = -Mathf.Infinity; // Time of the last dash
 
         // Gravity and Jumping
         public bool canJump;
@@ -102,7 +111,6 @@ namespace XtremeFPS.FPSController
 
         private bool isZoomed;
 
-
         //Head Bobbing effect
         public bool canHeadBob;
         public float headBobAmplitude = 0.01f;
@@ -138,7 +146,6 @@ namespace XtremeFPS.FPSController
         private AudioSource audioSource;
         private float AudioEffectSpeed;
         private bool isMoving = false;
-
 
         // Handling Physics
         public bool canPush;
@@ -193,6 +200,7 @@ namespace XtremeFPS.FPSController
             HandleStateMachine();
             DetectSurfaceAndMovement();
             InteractionHandling();
+            HandleDash();
             if (MovementState == PlayerMovementState.Sliding) HanldeSliding();
 
             if (!canHeadBob || MovementState == PlayerMovementState.Sliding) return;
@@ -546,6 +554,56 @@ namespace XtremeFPS.FPSController
             }
         }
 
+        private void HandleDash()
+        {
+            if (!canDash || isDashing || Time.time < lastDashTime + dashCooldown) return;
+
+            if (inputManager.isDashing) // Check if the dash input is triggered
+            {
+                StartCoroutine(PerformDash());
+            }
+        }
+
+        private IEnumerator PerformDash()
+        {
+            isDashing = true;
+            lastDashTime = Time.time;
+
+            Vector3 dashDirection = inputManager.moveDirection == Vector2.zero
+                ? transform.forward // Dash forward if no movement input
+                : (transform.right * inputManager.moveDirection.x + transform.forward * inputManager.moveDirection.y).normalized;
+
+            float dashStartTime = Time.time;
+            Vector3 startPosition = transform.position;
+
+            // Temporarily increase speed for the dash
+            float originalSpeed = targetSpeed;
+            targetSpeed *= dashSpeedMultiplier;
+
+            // Enable invulnerability during the dash
+            SetInvulnerability(true);
+
+            while (Time.time < dashStartTime + dashDuration)
+            {
+                CharacterController.Move(dashDirection * dashDistance * Time.deltaTime);
+                yield return null;
+            }
+
+            // Restore original speed and disable invulnerability
+            targetSpeed = originalSpeed;
+            SetInvulnerability(false);
+
+            isDashing = false;
+        }
+
+        private void SetInvulnerability(bool isInvulnerable)
+        {
+            Damageable playerDamageable = GetComponent<Damageable>();
+            if (playerDamageable != null)
+            {
+                playerDamageable.SetIsInvulnerable(isInvulnerable);
+            }
+        }
         #endregion
     }
 }
