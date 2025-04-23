@@ -25,7 +25,7 @@ public class PlayerSpaceshipController : MonoBehaviour
 
      void MoveSpaceship()
     {
-        spaceshipRigidbody.velocity = transform.forward * data.thrustAmount * (Mathf.Max(data.thrustInput,.2f));
+        spaceshipRigidbody.linearVelocity = transform.forward * data.thrustAmount * (Mathf.Max(data.thrustInput,.2f));
     }
 
     void TurnSpaceship()

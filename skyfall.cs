@@ -48,7 +48,7 @@ public class Skyfall : MonoBehaviour
         transform.position = new Vector3(transform.position.x, spawnHeight, transform.position.z);
 
         // Start falling
-        rb.velocity = new Vector3(0, -fallSpeed, 0);
+        rb.linearVelocity = new Vector3(0, -fallSpeed, 0);
     }
 
     void Update()
@@ -69,7 +69,7 @@ public class Skyfall : MonoBehaviour
         // Stop movement if the object hits the terrain
         if (collision.gameObject.CompareTag("Terrain"))
         {
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.isKinematic = true;
 
             // Disable the Rigidbody completely to prevent further interactions

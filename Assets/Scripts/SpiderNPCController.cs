@@ -331,8 +331,8 @@ public class SpiderNPCController : MonoBehaviour
         if (rb != null)
         {
             Vector3 direction = (player.position - projectileSpawnPoint.position).normalized;
-            rb.velocity = direction * projectileSpeed;
-            Debug.Log($"Projectile launched toward {player.position} with velocity {rb.velocity}");
+            rb.linearVelocity = direction * projectileSpeed;
+            Debug.Log($"Projectile launched toward {player.position} with velocity {rb.linearVelocity}");
         }
         else
         {
@@ -363,7 +363,7 @@ public class SpiderNPCController : MonoBehaviour
         Rigidbody playerRb = player.GetComponent<Rigidbody>();
         if (playerRb == null) return player.position;
 
-        Vector3 predictedPos = player.position + (playerRb.velocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
+        Vector3 predictedPos = player.position + (playerRb.linearVelocity * (Vector3.Distance(transform.position, player.position) / projectileSpeed));
         predictedPos += new Vector3(
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
             Random.Range(-predictionInaccuracy, predictionInaccuracy),
